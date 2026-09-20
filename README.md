@@ -17,7 +17,7 @@ déplacement complet (course, double saut, dash), une caméra dynamique avec mod
 | Action | Clavier | Manette |
 |---|---|---|
 | Se déplacer | ← → ou Q / D | Stick gauche |
-| Courir | Double appui sur une direction (maintenir) ou Maj | X |
+| Courir | Double appui sur une direction (maintenir) ou Maj | ZL (maintenir) |
 | Sauter / double saut | Espace | A |
 | Dash | E | B |
 | Mode concentration (dézoom) | A (maintenir) | RB (maintenir) |
