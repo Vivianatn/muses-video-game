@@ -1,0 +1,213 @@
+[gd_scene format=3 uid="uid://cpcdehjljw64s"]
+
+[ext_resource type="Texture2D" uid="uid://6xb1wyffqvur" path="res://Sprites/Héros/Idle/idle.png" id="1_801yk"]
+[ext_resource type="Script" uid="uid://h85mh37x0vsd" path="res://Scripts/Character/player.gd" id="1_l0tos"]
+[ext_resource type="Texture2D" uid="uid://csj4223wobuio" path="res://Sprites/Héros/Run/Run.png" id="2_l0tos"]
+[ext_resource type="Texture2D" uid="uid://mp4ygg108mwo" path="res://Sprites/Héros/Walk/Walk.png" id="3_vw006"]
+[ext_resource type="Texture2D" uid="uid://c0i4ao3exdkgm" path="res://Sprites/Héros/Jump/Jump.png" id="4_jump0"]
+[ext_resource type="Texture2D" uid="uid://7ggm85eqke86" path="res://Sprites/Héros/Fall/Fall.png" id="5_fall0"]
+[ext_resource type="Shader" uid="uid://c2h1loegujqx0" path="res://Shaders/vignette.gdshader" id="6_vign0"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ggc2y"]
+atlas = ExtResource("1_801yk")
+region = Rect2(0, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vgx5c"]
+atlas = ExtResource("1_801yk")
+region = Rect2(96, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6vj83"]
+atlas = ExtResource("1_801yk")
+region = Rect2(192, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yg3nc"]
+atlas = ExtResource("1_801yk")
+region = Rect2(288, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_17ttd"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s7hvb"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hv1gp"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l12si"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t23lb"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v0bjn"]
+atlas = ExtResource("2_l0tos")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kaplj"]
+atlas = ExtResource("3_vw006")
+region = Rect2(0, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4jgyf"]
+atlas = ExtResource("3_vw006")
+region = Rect2(88, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6ija8"]
+atlas = ExtResource("3_vw006")
+region = Rect2(176, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yvi0q"]
+atlas = ExtResource("3_vw006")
+region = Rect2(264, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_p4osx"]
+atlas = ExtResource("3_vw006")
+region = Rect2(352, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sy4ft"]
+atlas = ExtResource("3_vw006")
+region = Rect2(440, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fjhd6"]
+atlas = ExtResource("3_vw006")
+region = Rect2(528, 0, 88, 88)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0wtsp"]
+atlas = ExtResource("3_vw006")
+region = Rect2(616, 0, 88, 88)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ew5ud"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_fall0")
+}],
+"loop": 1,
+"name": &"fall",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ggc2y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vgx5c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6vj83")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yg3nc")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_jump0")
+}],
+"loop": 1,
+"name": &"jump",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_17ttd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s7hvb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hv1gp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l12si")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t23lb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v0bjn")
+}],
+"loop": 1,
+"name": &"run",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kaplj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4jgyf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6ija8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yvi0q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_p4osx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sy4ft")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fjhd6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0wtsp")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 9.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_gmhmn"]
+height = 60.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vign0"]
+shader = ExtResource("6_vign0")
+shader_parameter/intensity = 0.0
+shader_parameter/radius = 0.650000030875
+shader_parameter/softness = 0.5
+shader_parameter/shape = Vector2(1.1, 1)
+shader_parameter/color = Color(0, 0, 0, 0.8901961)
+
+[node name="player" type="CharacterBody2D" unique_id=846981261]
+script = ExtResource("1_l0tos")
+jump_velocity = -500.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1891369689]
+texture_filter = 1
+position = Vector2(0, -1)
+sprite_frames = SubResource("SpriteFrames_ew5ud")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Collision_simple" type="CollisionShape2D" parent="." unique_id=527272234]
+shape = SubResource("CapsuleShape2D_gmhmn")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=724143031]
+zoom = Vector2(2, 2)
+limit_left = 0
+limit_smoothed = true
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+
+[node name="FocusLayer" type="CanvasLayer" parent="." unique_id=1705917692]
+layer = 10
+
+[node name="Vignette" type="ColorRect" parent="FocusLayer" unique_id=720620421]
+material = SubResource("ShaderMaterial_vign0")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

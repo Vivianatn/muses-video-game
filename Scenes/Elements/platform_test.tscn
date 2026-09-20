@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://byg44vh65hqos"]
+
+[ext_resource type="Texture2D" uid="uid://cnbds4xgi3dxf" path="res://icon.svg" id="1_ht3v7"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jdjar"]
+size = Vector2(128, 128)
+
+[node name="platform test" type="StaticBody2D" unique_id=146108676]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("1_ht3v7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=576880075]
+shape = SubResource("RectangleShape2D_jdjar")

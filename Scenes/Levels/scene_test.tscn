@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://cqpiksonpw7xl"]
+
+[ext_resource type="PackedScene" uid="uid://cpcdehjljw64s" path="res://Scenes/Character/player.tscn" id="1_pdl4h"]
+[ext_resource type="PackedScene" uid="uid://byg44vh65hqos" path="res://Scenes/Elements/platform_test.tscn" id="2_5on7j"]
+
+[node name="Scene_test" type="Node2D" unique_id=66472888]
+
+[node name="player" parent="." unique_id=846981261 instance=ExtResource("1_pdl4h")]
+position = Vector2(390, 22)
+
+[node name="Platform_test" parent="." unique_id=89348716 instance=ExtResource("2_5on7j")]
+position = Vector2(64, 300)
+
+[node name="Platform_test2" parent="." unique_id=707180886 instance=ExtResource("2_5on7j")]
+position = Vector2(192, 300)
+
+[node name="Platform_test3" parent="." unique_id=146108676 instance=ExtResource("2_5on7j")]
+position = Vector2(370, 300)
+
+[node name="Platform_test4" parent="." unique_id=1046845020 instance=ExtResource("2_5on7j")]
+position = Vector2(498, 300)
+
+[node name="Platform_test5" parent="." unique_id=460773071 instance=ExtResource("2_5on7j")]
+position = Vector2(626, 300)
+
+[node name="Platform_test6" parent="." unique_id=748511562 instance=ExtResource("2_5on7j")]
+position = Vector2(823, 184)
+rotation = 0.0019709384
+
+[node name="Platform_test7" parent="." unique_id=1150261157 instance=ExtResource("2_5on7j")]
+position = Vector2(951, 184)
+rotation = 0.0019709384
+
+[node name="Platform_test8" parent="." unique_id=78397749 instance=ExtResource("2_5on7j")]
+position = Vector2(1079, 184)
+rotation = 0.0019709384
+
+[node name="Platform_test9" parent="." unique_id=928384134 instance=ExtResource("2_5on7j")]
+position = Vector2(1249, 300)
+rotation = 0.0019709384
+
+[node name="Platform_test10" parent="." unique_id=1758804793 instance=ExtResource("2_5on7j")]
+position = Vector2(1377, 300)
+rotation = 0.0019709384
+
+[node name="Platform_test11" parent="." unique_id=1748498496 instance=ExtResource("2_5on7j")]
+position = Vector2(1505, 300)
+rotation = 0.0019709384
+
+[node name="Platform_test12" parent="." unique_id=850451051 instance=ExtResource("2_5on7j")]
+position = Vector2(1759, 480.00003)
+rotation = 0.0019709384
+
+[node name="Platform_test13" parent="." unique_id=480953562 instance=ExtResource("2_5on7j")]
+position = Vector2(1887, 480.00003)
+rotation = 0.0019709384
+
+[node name="Platform_test14" parent="." unique_id=680944074 instance=ExtResource("2_5on7j")]
+position = Vector2(2015, 480.00003)
+rotation = 0.0019709384
