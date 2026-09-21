@@ -86,3 +86,21 @@ toucher au code :
 - [ ] Wall slide / wall jump
 - [ ] Niveaux et limites de caméra par salle
 - [ ] Système de vie et ennemis
+
+## Synchroniser avec GitHub
+
+Des scripts dans `tools/` automatisent les opérations Git courantes (double-clic
+sur le `.bat` ou lancement depuis un terminal) :
+
+| Commande | Effet |
+|---|---|
+| `sync.bat` (à la racine) ou `.\tools\sync.ps1` | **Tout en un** : pull puis commit + push |
+| `tools\pull.bat` ou `.\tools\pull.ps1` | Récupère les modifications distantes (`git pull --rebase`), en mettant de côté puis restaurant les modifications locales non commitées |
+| `tools\push.bat` ou `.\tools\push.ps1` | `git add -A`, commit, puis push de la branche courante |
+
+Un message de commit peut être passé en argument, sinon un message horodaté est
+généré automatiquement :
+
+```
+sync.bat "Ajout du système de dash"
+```
