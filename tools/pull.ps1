@@ -2,6 +2,7 @@
 # Usage : .\tools\pull.ps1
 $ErrorActionPreference = "Continue"
 Set-Location (Split-Path -Parent $PSScriptRoot)
+& "$PSScriptRoot_check.ps1"; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $branch = git rev-parse --abbrev-ref HEAD
 Write-Host "==> Pull de origin/$branch..." -ForegroundColor Cyan
