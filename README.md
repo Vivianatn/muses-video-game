@@ -104,3 +104,14 @@ généré automatiquement :
 ```
 sync.bat "Ajout du système de dash"
 ```
+
+### Activer / désactiver la synchronisation sur un ordinateur
+
+Ces commandes n'affectent **que l'ordinateur où elles sont tapées** (l'état est
+stocké dans `.git/config`, jamais commité) :
+
+| Commande | Effet |
+|---|---|
+| `tools\enable.bat` ou `.\tools\enable.ps1` | Active la synchronisation (état par défaut) |
+| `tools\disable.bat` ou `.\tools\disable.ps1` | Désactive : `pull`, `push` et `sync` refusent de s'exécuter |
+| `tools\status.bat` ou `.\tools\status.ps1` | Affiche l'état actuel |
