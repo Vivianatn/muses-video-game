@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Weapons/bullet.gd" id="1_bullet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bullet"]
+radius = 3.0
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_bullet"]
+
+[node name="Bullet" type="Area2D"]
+collision_layer = 0
+collision_mask = 5
+script = ExtResource("1_bullet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bullet")
+
+[node name="Visual" type="Polygon2D" parent="."]
+material = SubResource("CanvasItemMaterial_bullet")
+color = Color(1, 0.85, 0.35, 1)
+polygon = PackedVector2Array(-5, -1.5, 5, -1.5, 5, 1.5, -5, 1.5)

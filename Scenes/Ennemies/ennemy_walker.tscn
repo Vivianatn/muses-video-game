@@ -1,0 +1,245 @@
+[gd_scene format=3 uid="uid://dk24cr58sl0u2"]
+
+[ext_resource type="Script" uid="uid://2tgst01ie06v" path="res://Scripts/Ennemies/ennemy_walker.gd" id="1_walker"]
+[ext_resource type="Texture2D" uid="uid://b1sjr5rakxq5q" path="res://Sprites/Ennemies/Automate/Die/South-East_0002.png" id="2_1lyhb"]
+[ext_resource type="Texture2D" uid="uid://bvsjnrvdj1lpk" path="res://Sprites/Ennemies/Automate/Idle/South-East_0001.png" id="2_2fhq4"]
+[ext_resource type="Texture2D" uid="uid://fwlnigpsdsww" path="res://Sprites/Ennemies/Automate/Attack/South-East_0002.png" id="2_ljoi0"]
+[ext_resource type="Texture2D" uid="uid://u3jx75en8xp0" path="res://Sprites/Ennemies/Automate/Idle/South-East_0002.png" id="3_0gcly"]
+[ext_resource type="Texture2D" uid="uid://dg3ochlmchgwe" path="res://Sprites/Ennemies/Automate/Attack/South-East_0003.png" id="3_0wk72"]
+[ext_resource type="Texture2D" uid="uid://tl52jkekrpfe" path="res://Sprites/Ennemies/Automate/Die/South-East_0003.png" id="3_i2qdp"]
+[ext_resource type="Texture2D" uid="uid://byh4tlwhnpsw8" path="res://Sprites/Ennemies/Automate/Die/South-East_0004.png" id="4_cm58n"]
+[ext_resource type="Texture2D" uid="uid://1ipi14j6d1bb" path="res://Sprites/Ennemies/Automate/Attack/South-East_0004.png" id="4_dlloy"]
+[ext_resource type="Texture2D" uid="uid://t6g55lxwxory" path="res://Sprites/Ennemies/Automate/Idle/South-East_0003.png" id="4_osyca"]
+[ext_resource type="Texture2D" uid="uid://bhwwp1lilh0rl" path="res://Sprites/Ennemies/Automate/Die/South-East_0005.png" id="5_d32j8"]
+[ext_resource type="Texture2D" uid="uid://bvxm3gd2h2nhv" path="res://Sprites/Ennemies/Automate/Idle/South-East_0004.png" id="5_nlvwr"]
+[ext_resource type="Texture2D" uid="uid://kmf3fcyvr8qu" path="res://Sprites/Ennemies/Automate/Attack/South-East_0005.png" id="5_qut4v"]
+[ext_resource type="Texture2D" uid="uid://fgosgahqblfo" path="res://Sprites/Ennemies/Automate/Die/South-East_0006.png" id="6_2bud7"]
+[ext_resource type="Texture2D" uid="uid://drp3cuv3s3ole" path="res://Sprites/Ennemies/Automate/Attack/South-East_0006.png" id="6_4w28w"]
+[ext_resource type="Texture2D" uid="uid://bhyomdlsnxbhl" path="res://Sprites/Ennemies/Automate/Walk/South-East_0001.png" id="6_6ubxv"]
+[ext_resource type="Texture2D" uid="uid://1mls8sp5a7wq" path="res://Sprites/Ennemies/Automate/Die/South-East_0007.png" id="7_ftcvp"]
+[ext_resource type="Texture2D" uid="uid://7x3djvcl637" path="res://Sprites/Ennemies/Automate/Walk/South-East_0002.png" id="7_jdpb7"]
+[ext_resource type="Texture2D" uid="uid://dlli7s5r3fxrw" path="res://Sprites/Ennemies/Automate/Attack/South-East_0007.png" id="7_od7li"]
+[ext_resource type="Texture2D" uid="uid://brtpjnqpocmi5" path="res://Sprites/Ennemies/Automate/Attack/South-East_0008.png" id="8_iuaiy"]
+[ext_resource type="Texture2D" uid="uid://dli4dg8qhrti" path="res://Sprites/Ennemies/Automate/Walk/South-East_0003.png" id="8_lygw0"]
+[ext_resource type="Texture2D" uid="uid://cmafsnoiordr6" path="res://Sprites/Ennemies/Automate/Die/South-East_0008.png" id="8_wunh1"]
+[ext_resource type="Texture2D" uid="uid://cm6kf8eyqmd2l" path="res://Sprites/Ennemies/Automate/Walk/South-East_0004.png" id="9_5xug1"]
+[ext_resource type="Texture2D" uid="uid://dnqc6u62ybthc" path="res://Sprites/Ennemies/Automate/Attack/South-East_0009.png" id="9_601b4"]
+[ext_resource type="Texture2D" uid="uid://bpn5rt3b2034l" path="res://Sprites/Ennemies/Automate/Die/South-East_0009.png" id="9_o56om"]
+[ext_resource type="Texture2D" uid="uid://dqila73juvys1" path="res://Sprites/Ennemies/Automate/Walk/South-East_0005.png" id="10_1lyhb"]
+[ext_resource type="Texture2D" uid="uid://clic6fqimoik0" path="res://Sprites/Ennemies/Automate/Walk/South-East_0006.png" id="11_i2qdp"]
+[ext_resource type="Texture2D" uid="uid://b7vpeb58mhn7x" path="res://Sprites/Ennemies/Automate/Walk/South-East_0007.png" id="12_cm58n"]
+[ext_resource type="Texture2D" uid="uid://cybxl8bfxp04k" path="res://Sprites/Ennemies/Automate/Walk/South-East_0008.png" id="13_d32j8"]
+[ext_resource type="Texture2D" uid="uid://uqd60pu6d1sv" path="res://Sprites/Ennemies/Automate/Run/South-East_0001.png" id="22_anet7"]
+[ext_resource type="Texture2D" uid="uid://hpwhjdux5nuu" path="res://Sprites/Ennemies/Automate/Run/South-East_0002.png" id="23_kcu8u"]
+[ext_resource type="Texture2D" uid="uid://b1j413kobfvy8" path="res://Sprites/Ennemies/Automate/Run/South-East_0003.png" id="24_mxknk"]
+[ext_resource type="Texture2D" uid="uid://b52i0bnugbe5u" path="res://Sprites/Ennemies/Automate/Run/South-East_0004.png" id="25_ktlri"]
+[ext_resource type="Texture2D" uid="uid://ce366ad81botp" path="res://Sprites/Ennemies/Automate/Run/South-East_0005.png" id="26_ijca8"]
+[ext_resource type="Texture2D" uid="uid://dmn3ewm7h55uw" path="res://Sprites/Ennemies/Automate/Run/South-East_0006.png" id="27_mh3gf"]
+[ext_resource type="Texture2D" uid="uid://nwfdc3mmbawf" path="res://Sprites/Ennemies/Automate/Run/South-East_0007.png" id="28_cm1jr"]
+[ext_resource type="Texture2D" uid="uid://5omkux7a8mkt" path="res://Sprites/Ennemies/Automate/Run/South-East_0008.png" id="29_aagr1"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_jrwoi"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_ljoi0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_0wk72")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_dlloy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_qut4v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_4w28w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_od7li")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_iuaiy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_601b4")
+}],
+"loop": 1,
+"name": &"attack",
+"speed": 13.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_1lyhb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_i2qdp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_cm58n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_d32j8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_2bud7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ftcvp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_wunh1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_o56om")
+}],
+"loop": 0,
+"name": &"die",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_2fhq4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_0gcly")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_osyca")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_nlvwr")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("22_anet7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_kcu8u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_mxknk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_ktlri")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_ijca8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_mh3gf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_cm1jr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_aagr1")
+}],
+"loop": 1,
+"name": &"run",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("6_6ubxv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_jdpb7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_lygw0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_5xug1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_1lyhb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_i2qdp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_cm58n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_d32j8")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
+height = 64.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
+radius = 150.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hurt"]
+radius = 11.0
+height = 42.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hit"]
+size = Vector2(28, 44)
+
+[node name="EnnemyWalker" type="CharacterBody2D" unique_id=2001834584 groups=["enemies"]]
+scale = Vector2(1.4, 1.4)
+collision_layer = 4
+script = ExtResource("1_walker")
+attack_cooldown = 1.0
+idle_sprite_offset = Vector2(0, 2)
+walk_sprite_offset = Vector2(0, 1.5)
+chase_sprite_offset = Vector2(0, 1.5)
+death_sprite_offset = Vector2(0, 2)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=557778374]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_jrwoi")
+animation = &"run"
+autoplay = "idle"
+frame = 3
+frame_progress = 0.5970285
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=1834874805]
+shape = SubResource("CapsuleShape2D_body")
+
+[node name="DetectionZone" type="Area2D" parent="." unique_id=564605130]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone" unique_id=954622574]
+shape = SubResource("CircleShape2D_detect")
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=232549442]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=676756161]
+shape = SubResource("CapsuleShape2D_hurt")
+
+[node name="Hitbox" type="Area2D" parent="." unique_id=1704741627]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=232142921]
+shape = SubResource("RectangleShape2D_hit")
+
+[node name="GroundCheck" type="RayCast2D" parent="." unique_id=20180593]
+position = Vector2(14, 0)
+target_position = Vector2(0, 30)
+
+[node name="WallCheck" type="RayCast2D" parent="." unique_id=2069050903]
+target_position = Vector2(18, 0)
+
+[node name="StateTimer" type="Timer" parent="." unique_id=945683881]
+one_shot = true
+
+[node name="DirectionCheck" type="RayCast2D" parent="." unique_id=407748992]
+position = Vector2(0, -13.571429)
+target_position = Vector2(43.571, 0)

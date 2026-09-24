@@ -3,10 +3,16 @@
 [ext_resource type="Texture2D" uid="uid://6xb1wyffqvur" path="res://Sprites/Héros/Idle/idle.png" id="1_801yk"]
 [ext_resource type="Script" uid="uid://h85mh37x0vsd" path="res://Scripts/Character/player.gd" id="1_l0tos"]
 [ext_resource type="Texture2D" uid="uid://csj4223wobuio" path="res://Sprites/Héros/Run/Run.png" id="2_l0tos"]
+[ext_resource type="Texture2D" uid="uid://bg14twohrr7vf" path="res://Sprites/Héros/Grab/Grab.png" id="3_6vj83"]
+[ext_resource type="Texture2D" uid="uid://dnn108m0i8n7r" path="res://Sprites/Héros/Fire/South-East_0002.png" id="3_s7hvb"]
 [ext_resource type="Texture2D" uid="uid://mp4ygg108mwo" path="res://Sprites/Héros/Walk/Walk.png" id="3_vw006"]
+[ext_resource type="Texture2D" uid="uid://bxg3k5mmbrh2p" path="res://Sprites/Héros/Fire/South-East_0003.png" id="4_hv1gp"]
 [ext_resource type="Texture2D" uid="uid://c0i4ao3exdkgm" path="res://Sprites/Héros/Jump/Jump.png" id="4_jump0"]
 [ext_resource type="Texture2D" uid="uid://7ggm85eqke86" path="res://Sprites/Héros/Fall/Fall.png" id="5_fall0"]
+[ext_resource type="Texture2D" uid="uid://38rgkaobase3" path="res://Sprites/Héros/Fire/South-East_0004.png" id="5_l12si"]
 [ext_resource type="Shader" uid="uid://c2h1loegujqx0" path="res://Shaders/vignette.gdshader" id="6_vign0"]
+[ext_resource type="PackedScene" path="res://Scenes/Weapons/bullet.tscn" id="7_bullet"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/health_bar.tscn" id="8_hbar"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ggc2y"]
 atlas = ExtResource("1_801yk")
@@ -88,6 +94,28 @@ animations = [{
 }],
 "loop": 1,
 "name": &"fall",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_s7hvb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_hv1gp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_l12si")
+}],
+"loop": 1,
+"name": &"fire",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_6vj83")
+}],
+"loop": 1,
+"name": &"grab",
 "speed": 5.0
 }, {
 "frames": [{
@@ -179,9 +207,17 @@ shader_parameter/softness = 0.5
 shader_parameter/shape = Vector2(1.1, 1)
 shader_parameter/color = Color(0, 0, 0, 0.8901961)
 
-[node name="player" type="CharacterBody2D" unique_id=846981261]
+[node name="player" type="CharacterBody2D" unique_id=846981261 groups=["player"]]
+collision_layer = 2
 script = ExtResource("1_l0tos")
 jump_velocity = -500.0
+fall_anim_delay = 1.0
+bullet_scene = ExtResource("7_bullet")
+idle_sprite_offset = Vector2(0, 2)
+walk_sprite_offset = Vector2(0, 0)
+run_sprite_offset = Vector2(0, 1)
+jump_sprite_offset = Vector2(0, 0)
+grab_sprite_offset = Vector2(-10, 0)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1891369689]
 texture_filter = 1
@@ -211,3 +247,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="Muzzle" type="Marker2D" parent="." unique_id=1144594285]
+position = Vector2(14, -6)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="HealthBar" parent="HUD" instance=ExtResource("8_hbar")]
