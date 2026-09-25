@@ -1,0 +1,110 @@
+[gd_scene format=3 uid="uid://dkqhrr0jrmuut"]
+
+[ext_resource type="Script" uid="uid://bjstptybg1tr3" path="res://Scripts/Character/dory.gd" id="0_dory"]
+[ext_resource type="Texture2D" uid="uid://dpq4yprdtlasx" path="res://Sprites/Dory/Idle/South_0001.png" id="1_tcygg"]
+[ext_resource type="Texture2D" uid="uid://dqlqodwtvmv1x" path="res://Sprites/Dory/Idle/South_0002.png" id="2_cx1rk"]
+[ext_resource type="Texture2D" uid="uid://cixvk240qybsl" path="res://Sprites/Dory/Idle/South_0003.png" id="3_jx6kr"]
+[ext_resource type="Texture2D" uid="uid://bwox47cy6wmnm" path="res://Sprites/Dory/Idle/South_0004.png" id="4_wd1lj"]
+[ext_resource type="Texture2D" uid="uid://yowah82a2n5b" path="res://Sprites/Dory/Idle/South_0005.png" id="5_qbxjr"]
+[ext_resource type="Texture2D" uid="uid://bg3javys8xe0f" path="res://Sprites/Dory/Idle/South_0006.png" id="6_fv45g"]
+[ext_resource type="Texture2D" uid="uid://cvtqvtmo5cyys" path="res://Sprites/Dory/Idle/South_0007.png" id="7_in74m"]
+[ext_resource type="Texture2D" uid="uid://bymm6wiul4cdl" path="res://Sprites/Dory/Idle/South_0008.png" id="8_7n3ad"]
+[ext_resource type="Texture2D" uid="uid://c04y0k3oo6xil" path="res://Sprites/Dory/Walk/South_0001 (1).png" id="9_aqni6"]
+[ext_resource type="Texture2D" uid="uid://ck0jowp0vopax" path="res://Sprites/Dory/Walk/South_0002 (1).png" id="10_gmfwr"]
+[ext_resource type="Texture2D" uid="uid://bd4c0ro68g3gb" path="res://Sprites/Dory/Walk/South_0003 (1).png" id="11_jkt1j"]
+[ext_resource type="Texture2D" uid="uid://daeu4mqtflfry" path="res://Sprites/Dory/Walk/South_0004 (1).png" id="12_0m3er"]
+[ext_resource type="Texture2D" uid="uid://to5m0fp0fmxc" path="res://Sprites/Dory/Walk/South_0005 (1).png" id="13_2io01"]
+[ext_resource type="Texture2D" uid="uid://dfklwfsqip2xm" path="res://Sprites/Dory/Walk/South_0006 (1).png" id="14_ne0vw"]
+[ext_resource type="Texture2D" uid="uid://df45qr218goox" path="res://Sprites/Dory/Walk/South_0007 (1).png" id="15_877hk"]
+[ext_resource type="Texture2D" uid="uid://dkcd4412o4y1s" path="res://Sprites/Dory/Walk/South_0008 (1).png" id="16_76eq7"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ew5ud"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_tcygg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_cx1rk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_jx6kr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_wd1lj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_qbxjr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_fv45g")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_in74m")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_7n3ad")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_aqni6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_gmfwr")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_jkt1j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_0m3er")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_2io01")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_ne0vw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_877hk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_76eq7")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ew5ud"]
+radius = 13.0
+height = 120.0
+
+[node name="Dory" type="CharacterBody2D" unique_id=1303750981]
+collision_layer = 16
+script = ExtResource("0_dory")
+idle_sprite_offset = Vector2(0, 2)
+walk_sprite_offset = Vector2(0, 2)
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1210489095]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_ew5ud")
+animation = &"walk"
+autoplay = "idle"
+frame_progress = 0.50968885
+
+[node name="Body" type="CollisionShape2D" parent="." unique_id=441097986]
+position = Vector2(-2, 0)
+shape = SubResource("CapsuleShape2D_ew5ud")
+
+[node name="GroundCheck" type="RayCast2D" parent="." unique_id=27175803]
+target_position = Vector2(0, 18)
+
+[node name="WallCheck" type="RayCast2D" parent="." unique_id=877653943]
+target_position = Vector2(22, 0)
+
+[node name="StateTimer" type="Timer" parent="." unique_id=1012475542]
+one_shot = true

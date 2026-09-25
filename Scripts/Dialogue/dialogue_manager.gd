@@ -24,6 +24,13 @@ signal choice_made(index: int, choice: DialogueChoice)
 ## Le point d'accroche du dialogue sur le reste du jeu : `@ nom argument`
 ## dans un fichier, ou le champ `event` d'une réplique / d'un choix.
 signal event(name: StringName, arg: String)
+## Émis quand une variable de dialogue change, depuis un fichier (`$ ...`) ou
+## depuis un script (set_var()).
+signal variable_changed(name: StringName, value: Variant)
+## Émis quand le dialogue choisit la prochaine conversation du PNJ (`>> ...`).
+## Le déclencheur qui a lancé la conversation s'en charge tout seul ; ce signal
+## sert aux autres scripts qui voudraient réagir.
+signal next_dialogue_requested(target: String, context: Node)
 
 ## Scène de la boîte utilisée si aucune n'est déjà présente dans le niveau.
 const BOX_SCENE := preload("res://Scenes/UI/dialogue_box.tscn")
@@ -49,6 +56,14 @@ var _active: bool = false
 ## Nœud qui a lancé la conversation (le PNJ, le déclencheur...). Transmis tel
 ## quel aux scripts qui écoutent, pour savoir qui parle.
 var _context: Node = null
+## Variables de dialogue, partagées par toutes les conversations du jeu.
+var _vars: Dictionary[StringName, Variant] = {}
+## Repère `{nom}` dans un texte.
+var _var_pattern := RegEx.create_from_string("\\{([A-Za-z_][A-Za-z0-9_]*)\\}")
+## Options réellement proposées pour la réplique affichée, dans l'ordre des
+## boutons : celles dont la condition est fausse n'y sont pas, donc l'index
+## renvoyé par la boîte ne correspond plus forcément à line.choices.
+var _shown_choices: Array[DialogueChoice] = []
 
 
 func _ready() -> void:
@@ -124,6 +139,113 @@ func get_context() -> Node:
 	return _context
 
 
+# --- Variables ------------------------------------------------------------
+
+## Valeur d'une variable de dialogue, ou `default` si elle n'existe pas.
+func get_var(var_name: StringName, default: Variant = null) -> Variant:
+	return _vars.get(var_name, default)
+
+
+## Donne une valeur à une variable. C'est le point d'entrée d'une sauvegarde
+## ou d'un script de quête : Dialogues.set_var(&"vory", "Vory").
+func set_var(var_name: StringName, value: Variant) -> void:
+	# typeof() d'abord : comparer un nombre à un texte n'a pas de sens.
+	if _vars.has(var_name) and typeof(_vars[var_name]) == typeof(value) and _vars[var_name] == value:
+		return
+	_vars[var_name] = value
+	variable_changed.emit(var_name, value)
+
+
+func has_var(var_name: StringName) -> bool:
+	return _vars.has(var_name)
+
+
+## Toutes les variables, pour les sauvegarder. Copie : la modifier ne change
+## rien au jeu.
+func get_vars() -> Dictionary[StringName, Variant]:
+	return _vars.duplicate()
+
+
+## Oublie toutes les variables (nouvelle partie).
+func clear_vars() -> void:
+	_vars.clear()
+
+
+## Vrai si la condition est remplie. Vide = toujours vrai. Formes acceptées :
+##     vory == Vory        vory != Vory        (texte ou nombre)
+##     visites >= 2        visites < 3         (<, >, <=, >= : nombres)
+##     chemin_montre       pas chemin_montre   (la variable existe et ne vaut
+##                                              ni 0, ni vide, ni « non »)
+## La valeur à droite peut contenir des `{nom}`.
+func check(condition: String) -> bool:
+	var text := condition.strip_edges()
+	if text.is_empty():
+		return true
+
+	for negation in ["pas ", "non ", "!"]:
+		if text.begins_with(negation):
+			return not check(text.substr(negation.length()))
+
+	for op in ["==", "!=", "<=", ">=", "<", ">"]:
+		var at := text.find(op)
+		if at < 0:
+			continue
+		var var_name := StringName(text.substr(0, at).strip_edges())
+		var expected: Variant = _parse_value(format_text(text.substr(at + op.length()).strip_edges()))
+		return _compare(get_var(var_name), op, expected)
+
+	return _is_truthy(get_var(StringName(text)))
+
+
+static func _compare(value: Variant, op: String, expected: Variant) -> bool:
+	var numbers := (value is int or value is float) and (expected is int or expected is float)
+	match op:
+		"==":
+			if numbers:
+				return value == expected
+			return value != null and str(value) == str(expected)
+		"!=":
+			if numbers:
+				return value != expected
+			return value == null or str(value) != str(expected)
+	if not numbers:
+		# Une variable pas encore définie (ou du texte) n'est ni plus grande ni
+		# plus petite que quoi que ce soit.
+		return false
+	match op:
+		"<=": return value <= expected
+		">=": return value >= expected
+		"<": return value < expected
+		">": return value > expected
+	return false
+
+
+static func _is_truthy(value: Variant) -> bool:
+	if value == null:
+		return false
+	if value is bool:
+		return value
+	if value is int or value is float:
+		return value != 0
+	var text := str(value).strip_edges().to_lower()
+	return not (text.is_empty() or text in ["non", "faux", "false", "0"])
+
+
+## Remplace chaque `{nom}` par la valeur de la variable. Une variable inconnue
+## reste écrite telle quelle, pour qu'une faute de frappe se voie à l'écran.
+func format_text(source: String) -> String:
+	if not source.contains("{"):
+		return source
+	var result := ""
+	var last := 0
+	for found in _var_pattern.search_all(source):
+		var var_name := StringName(found.get_string(1))
+		result += source.substr(last, found.get_start() - last)
+		result += str(_vars[var_name]) if _vars.has(var_name) else found.get_string()
+		last = found.get_end()
+	return result + source.substr(last)
+
+
 # --- Déroulé --------------------------------------------------------------
 
 func _show_current() -> void:
@@ -144,8 +266,19 @@ func _show_current() -> void:
 
 		var line: DialogueLine = _dialogue.lines[_index]
 
+		if not check(line.condition):
+			# Condition fausse : la ligne n'existe pas, saut compris.
+			_index += 1
+			continue
+
+		if line.var_name != &"":
+			_apply_var(line)
+
+		if not line.next_dialogue.is_empty():
+			_request_next_dialogue(format_text(line.next_dialogue))
+
 		if line.event != &"":
-			event.emit(line.event, line.event_arg)
+			event.emit(line.event, format_text(line.event_arg))
 			# stop() a pu être appelé depuis l'écoute de l'événement.
 			if not _active:
 				return
@@ -155,9 +288,70 @@ func _show_current() -> void:
 				return
 			continue
 
-		line_shown.emit(line)
-		_box.show_line(line)
+		var shown := _resolve_line(line)
+		line_shown.emit(shown)
+		_box.show_line(shown)
 		return
+
+
+func _apply_var(line: DialogueLine) -> void:
+	var value := format_text(line.var_value)
+	match line.var_op:
+		DialogueLine.VarOp.DEFAULT:
+			if not has_var(line.var_name):
+				set_var(line.var_name, _parse_value(value))
+		DialogueLine.VarOp.ADD:
+			var current: Variant = get_var(line.var_name, 0)
+			var amount: Variant = _parse_value(value)
+			if not (current is int or current is float) or not (amount is int or amount is float):
+				push_warning("Dialogues : « %s += %s » ne porte pas sur des nombres, ignoré." % [line.var_name, value])
+				return
+			set_var(line.var_name, current + amount)
+		_:
+			set_var(line.var_name, _parse_value(value))
+
+
+## « 3 » devient le nombre 3, le reste reste du texte.
+static func _parse_value(value: String) -> Variant:
+	if value.is_valid_int():
+		return value.to_int()
+	if value.is_valid_float():
+		return value.to_float()
+	return value
+
+
+## Copie de la réplique avec les `{nom}` remplacés, pour l'affichage. On ne
+## touche pas à l'original : la même réplique peut revenir plus tard avec une
+## autre valeur (Vory, d'abord « Robot étrange », puis « Vory »).
+func _resolve_line(line: DialogueLine) -> DialogueLine:
+	var shown := line.duplicate() as DialogueLine
+	shown.speaker = format_text(line.speaker)
+	shown.speaker_key = line.speaker.replace("{", "").replace("}", "").strip_edges()
+	shown.text = format_text(line.text)
+
+	_shown_choices.clear()
+	var choices: Array[DialogueChoice] = []
+	for choice in line.choices:
+		if not check(choice.condition):
+			continue
+		_shown_choices.append(choice)
+		var copy := choice.duplicate() as DialogueChoice
+		copy.text = format_text(choice.text)
+		choices.append(copy)
+	# Si toutes les options sont masquées, la réplique se valide comme une
+	# réplique normale et on passe à la suite.
+	shown.choices = choices
+	return shown
+
+
+## Transmet `>> ...` au nœud qui a lancé la conversation (le déclencheur du
+## PNJ), qui sait quelles conversations il possède.
+func _request_next_dialogue(target: String) -> void:
+	next_dialogue_requested.emit(target, _context)
+	if _context != null and _context.has_method(&"request_next_dialogue"):
+		_context.request_next_dialogue(target)
+	else:
+		push_warning("Dialogues : « >> %s » ignoré, la conversation n'a pas été lancée par un DialogueTrigger." % target)
 
 
 ## Avance l'index, en suivant `goto` s'il est renseigné.
@@ -190,15 +384,15 @@ func _on_box_advanced() -> void:
 func _on_box_choice(index: int) -> void:
 	if not _active:
 		return
-	var line: DialogueLine = _dialogue.lines[_index]
-	if index < 0 or index >= line.choices.size():
+	if index < 0 or index >= _shown_choices.size():
 		return
 
-	var choice: DialogueChoice = line.choices[index]
+	var choice: DialogueChoice = _shown_choices[index]
+	_shown_choices.clear()
 	choice_made.emit(index, choice)
 
 	if choice.event != &"":
-		event.emit(choice.event, choice.event_arg)
+		event.emit(choice.event, format_text(choice.event_arg))
 		if not _active:
 			return
 

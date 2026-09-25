@@ -152,6 +152,15 @@ signal died
 @export var fall_sprite_offset: Vector2 = Vector2(0, 16)
 @export var grab_sprite_offset: Vector2 = Vector2(0, 16)
 @export var fire_sprite_offset: Vector2 = Vector2(0, 2)
+## Taille du sprite par animation : 1 = taille d'origine. Les pieds restent en
+## place, et seule l'image change de taille, pas la capsule. Voir SpriteFit.
+@export_range(0.1, 4.0, 0.01) var idle_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var walk_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var run_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var jump_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var fall_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var grab_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var fire_sprite_scale: float = 1.0
 
 @export_group("Limites")
 ## Le bord gauche du joueur ne peut pas aller plus à gauche que cette position.
@@ -210,6 +219,9 @@ var _base_zoom: float = 1.0
 var _zoom_out_active: bool = false
 # Entrées neutralisées de l'extérieur (dialogue, cinématique...).
 var _input_locked: bool = false
+# Le bouton de saut sert aussi à fermer un dialogue : on attend qu'il soit
+# relâché après le déverrouillage pour ne pas sauter en fin de conversation.
+var _jump_needs_release: bool = false
 # Direction verrouillée pendant le balayage caméra (ZERO = aucune).
 var _pan_lock: Vector2 = Vector2.ZERO
 # Distance entre le centre du joueur et le bord de sa collision.
@@ -357,7 +369,10 @@ func _update_timers(delta: float, on_floor: bool) -> void:
 	if not dash_resets_on_floor and _dash_cooldown_timer == 0.0:
 		_dash_available = true
 
-	if Input.is_action_just_pressed("jump"):
+	if _jump_needs_release and not Input.is_action_pressed("jump"):
+		_jump_needs_release = false
+
+	if Input.is_action_just_pressed("jump") and not _jump_needs_release:
 		_jump_buffer_timer = jump_buffer_time
 	else:
 		_jump_buffer_timer = maxf(_jump_buffer_timer - delta, 0.0)
@@ -725,16 +740,30 @@ func _play(anim: StringName) -> void:
 	# Chaque planche n'a pas la même taille de frame : on recale le sprite pour
 	# qu'il reste aligné sur la capsule de collision d'une animation à l'autre.
 	var off := Vector2.ZERO
+	var size := 1.0
 	match anim:
-		&"idle": off = idle_sprite_offset
-		&"walk": off = walk_sprite_offset
-		&"run": off = run_sprite_offset
-		&"jump": off = jump_sprite_offset
-		&"fall": off = fall_sprite_offset
-		&"grab": off = grab_sprite_offset
-		&"fire": off = fire_sprite_offset
-	# offset.x n'est pas inversé par flip_h : on le suit à la main.
-	sprite.offset = Vector2(off.x * _facing, off.y)
+		&"idle":
+			off = idle_sprite_offset
+			size = idle_sprite_scale
+		&"walk":
+			off = walk_sprite_offset
+			size = walk_sprite_scale
+		&"run":
+			off = run_sprite_offset
+			size = run_sprite_scale
+		&"jump":
+			off = jump_sprite_offset
+			size = jump_sprite_scale
+		&"fall":
+			off = fall_sprite_offset
+			size = fall_sprite_scale
+		&"grab":
+			off = grab_sprite_offset
+			size = grab_sprite_scale
+		&"fire":
+			off = fire_sprite_offset
+			size = fire_sprite_scale
+	SpriteFit.apply(sprite, off, size, _facing)
 
 
 func _update_animation(on_floor: bool) -> void:
@@ -821,6 +850,8 @@ func _pan_action(dir: Vector2) -> StringName:
 ## pendant une conversation, et utilisable pour toute cinématique.
 func set_input_locked(locked: bool) -> void:
 	_input_locked = locked
+	if not locked:
+		_jump_needs_release = true
 	if locked:
 		_is_sprinting = false
 		_jump_buffer_timer = 0.0
@@ -829,3 +860,31 @@ func set_input_locked(locked: bool) -> void:
 
 func is_input_locked() -> bool:
 	return _input_locked
+
+
+# --- Sauvegarde -----------------------------------------------------------
+# Appelées par l'autoload SaveGame : save_state() à chaque sauvegarde,
+# load_state() une fois le niveau d'une partie chargée prêt.
+
+func save_state() -> Dictionary:
+	return {
+		"position": global_position,
+		"health": _health,
+		"facing": _facing,
+	}
+
+
+func load_state(data: Dictionary) -> void:
+	if data.has("position"):
+		global_position = data.position
+		velocity = Vector2.ZERO
+		# Sinon le « saut » jusqu'au point de sauvegarde compterait comme une chute.
+		_fall_peak_y = global_position.y
+		# La caméra rejoint le joueur d'un coup au lieu de traverser le niveau.
+		camera.reset_smoothing()
+	if data.has("health"):
+		_health = clampi(int(data.health), 1, max_health)
+		health_changed.emit(_health, max_health)
+	if data.has("facing"):
+		_facing = float(data.facing)
+		sprite.flip_h = _facing < 0.0

@@ -91,9 +91,8 @@ script = ExtResource("1_vory")
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1442013352]
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_ocyta")
-animation = &"walk"
+animation = &"idle"
 autoplay = "idle"
-frame_progress = 0.9349438
 
 [node name="Body" type="CollisionShape2D" parent="." unique_id=2108709175]
 position = Vector2(-7, 0)

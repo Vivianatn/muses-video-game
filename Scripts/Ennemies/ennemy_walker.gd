@@ -124,14 +124,21 @@ enum State { IDLE, WALK, CHASE, ATTACK, DEAD }
 @export var attack_anim: StringName = &"attack"
 
 @export_group("Sprite")
-## Décalage du sprite par animation, pour compenser les tailles de frame
-## différentes et garder le personnage aligné sur sa collision.
-## Y positif descend le sprite ; X positif le décale vers l'avant.
+## Décalage et taille du sprite par animation, pour compenser les tailles de
+## frame différentes et garder le personnage aligné sur sa collision.
+## Offset : Y positif descend le sprite ; X positif le décale vers l'avant.
+## Scale : 1 = taille d'origine. Les pieds restent en place, et seule l'image
+## change de taille : pas la collision ni les zones d'attaque. Voir SpriteFit.
 @export var idle_sprite_offset: Vector2 = Vector2.ZERO
 @export var walk_sprite_offset: Vector2 = Vector2.ZERO
 @export var chase_sprite_offset: Vector2 = Vector2.ZERO
 @export var death_sprite_offset: Vector2 = Vector2.ZERO
 @export var attack_sprite_offset: Vector2 = Vector2.ZERO
+@export_range(0.1, 4.0, 0.01) var idle_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var walk_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var chase_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var death_sprite_scale: float = 1.0
+@export_range(0.1, 4.0, 0.01) var attack_sprite_scale: float = 1.0
 
 @export_group("Mort")
 ## Laisse le corps retomber au sol avant de figer la dépouille.
@@ -181,6 +188,11 @@ func _ready() -> void:
 	_health = max_health
 	_spawn_x = global_position.x
 	_place_probes()
+
+	# Déjà vaincu dans la partie chargée : load_state() le retire du niveau.
+	SaveGame.register(self)
+	if is_queued_for_deletion():
+		return
 
 	detection_zone.body_entered.connect(_on_detection_body_entered)
 	detection_zone.body_exited.connect(_on_detection_body_exited)
@@ -621,6 +633,8 @@ func _die(from: Node) -> void:
 	_disable_area(detection_zone)
 	_disable_area(attack_hitbox)
 
+	# Retenu tout de suite : il va être libéré avant la prochaine sauvegarde.
+	SaveGame.store(self, {"dead": true})
 	died.emit(from)
 
 	if not (death_settle_on_ground and not is_on_floor()):
@@ -714,14 +728,30 @@ func _play(anim: StringName) -> void:
 		sprite.play(anim)
 
 	var off := idle_sprite_offset
+	var size := idle_sprite_scale
 	if anim == walk_anim:
 		off = walk_sprite_offset
+		size = walk_sprite_scale
 	if anim == chase_anim:
 		off = chase_sprite_offset
+		size = chase_sprite_scale
 	if anim == death_anim:
 		off = death_sprite_offset
+		size = death_sprite_scale
 	if anim == attack_anim:
 		off = attack_sprite_offset
+		size = attack_sprite_scale
 
-	# offset.x n'est pas inversé par flip_h : on le suit à la main.
-	sprite.offset = Vector2(off.x * _direction, off.y)
+	SpriteFit.apply(sprite, off, size, _direction)
+
+
+# --- Sauvegarde -----------------------------------------------------------
+
+func save_state() -> Dictionary:
+	return {"dead": _state == State.DEAD}
+
+
+func load_state(data: Dictionary) -> void:
+	# Un ennemi vaincu ne revient pas au chargement d'une partie.
+	if data.get("dead", false):
+		queue_free()

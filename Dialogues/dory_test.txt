@@ -1,0 +1,4 @@
+$ dory ?= Robot féminin
+
+::depart
+{dory}: Salut gamin !

@@ -1,0 +1,126 @@
+[gd_scene format=3 uid="uid://c4rvbmt27lws2"]
+
+[ext_resource type="Script" uid="uid://bhl10k8gmub85" path="res://Scripts/Character/lery.gd" id="0_lery"]
+[ext_resource type="Texture2D" uid="uid://bko7ey4ws2781" path="res://Sprites/Léry/Idle/South-East_0001.png" id="1_sjrvc"]
+[ext_resource type="Texture2D" uid="uid://dyjy6nfaojvl3" path="res://Sprites/Léry/Idle/South-East_0002.png" id="2_uo4eo"]
+[ext_resource type="Texture2D" uid="uid://ded5m25l4v50b" path="res://Sprites/Léry/Idle/South-East_0003.png" id="3_ev615"]
+[ext_resource type="Texture2D" uid="uid://otk6q15ga0ss" path="res://Sprites/Léry/Idle/South-East_0004.png" id="4_lghb5"]
+[ext_resource type="Texture2D" uid="uid://b4dohrxcgo13s" path="res://Sprites/Léry/Idle/South-East_0005.png" id="5_i4sdx"]
+[ext_resource type="Texture2D" uid="uid://cf58hfqporkw3" path="res://Sprites/Léry/Idle/South-East_0006.png" id="6_n5j68"]
+[ext_resource type="Texture2D" uid="uid://be6qk50caqrxv" path="res://Sprites/Léry/Idle/South-East_0007.png" id="7_dbko4"]
+[ext_resource type="Texture2D" uid="uid://dky8ggkpuu73u" path="res://Sprites/Léry/Idle/South-East_0008.png" id="8_lcsfs"]
+[ext_resource type="Texture2D" uid="uid://dfqgxeybrhnkl" path="res://Sprites/Léry/Walk/South-East_0001.png" id="10_2746d"]
+[ext_resource type="Texture2D" uid="uid://d2hja6vvfo0hg" path="res://Sprites/Léry/Walk/South-East_0002.png" id="11_8c36n"]
+[ext_resource type="Texture2D" uid="uid://63cq108wauvj" path="res://Sprites/Léry/Walk/South-East_0003.png" id="12_k4lry"]
+[ext_resource type="Texture2D" uid="uid://cmvjg6meehhae" path="res://Sprites/Léry/Walk/South-East_0004.png" id="13_1r5ae"]
+[ext_resource type="Texture2D" uid="uid://csn4sqxoujcs4" path="res://Sprites/Léry/Walk/South-East_0005.png" id="14_cj01d"]
+[ext_resource type="Texture2D" uid="uid://bohiktf7eyegg" path="res://Sprites/Léry/Walk/South-East_0006.png" id="15_7njc2"]
+[ext_resource type="Texture2D" uid="uid://cfha0vdkepjiu" path="res://Sprites/Léry/Walk/South-East_0007.png" id="16_j4cel"]
+[ext_resource type="Texture2D" uid="uid://ceosnyd42k8w4" path="res://Sprites/Léry/Walk/South-East_0008.png" id="17_h5t8l"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ew5ud"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_sjrvc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_uo4eo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ev615")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_lghb5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_i4sdx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_n5j68")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_dbko4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_lcsfs")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_2746d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_8c36n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_k4lry")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_1r5ae")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_cj01d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_7njc2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_j4cel")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_h5t8l")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gmhmn"]
+size = Vector2(44, 98)
+
+[node name="Léry" type="CharacterBody2D" unique_id=1372044504]
+scale = Vector2(1.6, 1.6)
+collision_layer = 16
+script = ExtResource("0_lery")
+walk_speed = 0.0
+acceleration = 0.0
+friction = 0.0
+max_fall_speed = 0.0
+idle_time = Vector2(0, 0)
+walk_time = Vector2(0, 0)
+turn_chance_on_walk = 0.0
+turn_cooldown = 0.0
+turn_on_ledge = false
+turn_on_wall = false
+ground_probe_ahead = 0.0
+ground_probe_depth = 0.0
+wall_probe_ahead = 0.0
+idle_anim = &""
+walk_anim = &""
+idle_sprite_offset = null
+walk_sprite_offset = null
+idle_sprite_scale = null
+walk_sprite_scale = null
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1558434152]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_ew5ud")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="Body" type="CollisionShape2D" parent="." unique_id=1167937215]
+position = Vector2(3, 6)
+shape = SubResource("RectangleShape2D_gmhmn")
+
+[node name="GroundCheck" type="RayCast2D" parent="." unique_id=984150359]
+target_position = Vector2(0, 18)
+
+[node name="WallCheck" type="RayCast2D" parent="." unique_id=903700140]
+target_position = Vector2(22, 0)
+
+[node name="StateTimer" type="Timer" parent="." unique_id=678618854]
+one_shot = true

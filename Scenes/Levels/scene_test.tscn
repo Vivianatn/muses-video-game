@@ -5,6 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://dk24cr58sl0u2" path="res://Scenes/Ennemies/ennemy_walker.tscn" id="3_e8slb"]
 [ext_resource type="PackedScene" uid="uid://dbn4lhy8brojs" path="res://Scenes/Character/vory.tscn" id="4_1klcj"]
 [ext_resource type="PackedScene" uid="uid://cdlgtrg0muses" path="res://Scenes/Elements/dialogue_trigger.tscn" id="5_dtrg"]
+[ext_resource type="PackedScene" uid="uid://c4rvbmt27lws2" path="res://Scenes/Character/léry.tscn" id="6_nglel"]
+[ext_resource type="PackedScene" uid="uid://dkqhrr0jrmuut" path="res://Scenes/Character/dory.tscn" id="7_28767"]
+[ext_resource type="PackedScene" uid="uid://c5hl488560od5" path="res://Scenes/Collectable/connaissance.tscn" id="8_nfx64"]
+[ext_resource type="PackedScene" uid="uid://cpio0hay7m70m" path="res://Scenes/Collectable/ancient_key.tscn" id="9_caq6j"]
 
 [node name="Scene_test" type="Node2D" unique_id=66472888]
 
@@ -17,12 +21,34 @@ tile_map_data = PackedByteArray("AAAMAAYAAAADAAIAAAANAAYAAAAEAAIAAAArAAEAAAADAAI
 [node name="player" parent="." unique_id=846981261 instance=ExtResource("1_pdl4h")]
 position = Vector2(2321, 416)
 
-[node name="EnnemyWalker" parent="." unique_id=2001834584 instance=ExtResource("3_e8slb")]
-position = Vector2(3989, 403)
+[node name="PNJs" type="Node2D" parent="." unique_id=1001142839]
 
-[node name="Vory" parent="." unique_id=1594986491 instance=ExtResource("4_1klcj")]
-position = Vector2(1588, 374)
+[node name="Vory" parent="PNJs" unique_id=1594986491 instance=ExtResource("4_1klcj")]
+position = Vector2(1585, 385)
 
-[node name="DialogueTrigger" parent="Vory" unique_id=269065213 instance=ExtResource("5_dtrg")]
+[node name="DialogueTrigger" parent="PNJs/Vory" unique_id=269065213 instance=ExtResource("5_dtrg")]
 dialogue_files = Array[String](["res://Dialogues/vory_intro.txt", "res://Dialogues/vory_habituel.txt"])
+auto_advance = false
 prompt_margin = 10.0
+
+[node name="Léry" parent="PNJs" unique_id=1372044504 instance=ExtResource("6_nglel")]
+position = Vector2(988, 361)
+
+[node name="Dory" parent="PNJs" unique_id=1303750981 instance=ExtResource("7_28767")]
+position = Vector2(1245, 388)
+
+[node name="DialogueTrigger" parent="PNJs/Dory" unique_id=1352188459 instance=ExtResource("5_dtrg")]
+dialogue_files = Array[String](["res://Dialogues/dory_test.txt"])
+
+[node name="Items" type="Node2D" parent="." unique_id=1155160245]
+
+[node name="Connaissance" parent="Items" unique_id=1750263290 instance=ExtResource("8_nfx64")]
+position = Vector2(3037, -90)
+
+[node name="AncientKey" parent="Items" unique_id=1180082677 instance=ExtResource("9_caq6j")]
+position = Vector2(3137, 422)
+
+[node name="Ennemies" type="Node2D" parent="." unique_id=963576669]
+
+[node name="EnnemyWalker" parent="Ennemies" unique_id=2001834584 instance=ExtResource("3_e8slb")]
+position = Vector2(3989, 403)

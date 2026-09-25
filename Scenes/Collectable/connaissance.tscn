@@ -1,0 +1,82 @@
+[gd_scene format=3 uid="uid://c5hl488560od5"]
+
+[ext_resource type="Script" uid="uid://ccsgxji2aayn" path="res://Scripts/Collectable/collectable.gd" id="0_coll"]
+[ext_resource type="Texture2D" uid="uid://bl711pbodr40j" path="res://Sprites/Elements/Connaissance/unknown_0001.png" id="1_lgdwq"]
+[ext_resource type="Texture2D" uid="uid://dn6wrs6aevwqu" path="res://Sprites/Elements/Connaissance/unknown_0002.png" id="2_6qkx7"]
+[ext_resource type="Texture2D" uid="uid://brwyfjikke46c" path="res://Sprites/Elements/Connaissance/unknown_0003.png" id="3_abxxe"]
+[ext_resource type="Texture2D" uid="uid://n5ix1fi1rrdt" path="res://Sprites/Elements/Connaissance/unknown_0004.png" id="4_8fsvb"]
+[ext_resource type="Texture2D" uid="uid://ckdpkotxxu5pk" path="res://Sprites/Elements/Connaissance/unknown_0005.png" id="5_5dgft"]
+[ext_resource type="Texture2D" uid="uid://disb0cu1a8xpt" path="res://Sprites/Elements/Connaissance/unknown_0006.png" id="6_h17j2"]
+[ext_resource type="Texture2D" uid="uid://7clot7tebdi6" path="res://Sprites/Elements/Connaissance/unknown_0007.png" id="7_xq47p"]
+[ext_resource type="Texture2D" uid="uid://dqytbbsu22u63" path="res://Sprites/Elements/Connaissance/unknown_0008.png" id="8_l065j"]
+[ext_resource type="Texture2D" uid="uid://ctq08e2o7vq4s" path="res://Sprites/Elements/Connaissance/unknown_0009.png" id="9_m62vl"]
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_glow"]
+gradient = SubResource("Gradient_glow")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ew5ud"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_lgdwq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_6qkx7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_abxxe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_8fsvb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_5dgft")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_h17j2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_xq47p")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_l065j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_m62vl")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vf7ql"]
+size = Vector2(36, 60)
+
+[node name="Connaissance" type="Area2D" unique_id=1750263290]
+scale = Vector2(0.5, 0.5)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("0_coll")
+item_id = &"connaissance"
+
+[node name="Light" type="PointLight2D" parent="." unique_id=1953869446]
+color = Color(1, 0.84, 0.45, 1)
+energy = 0.25
+texture = SubResource("GradientTexture2D_glow")
+texture_scale = 1.5
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=378285844]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_ew5ud")
+autoplay = "default"
+
+[node name="Body" type="CollisionShape2D" parent="." unique_id=604499579]
+shape = SubResource("RectangleShape2D_vf7ql")

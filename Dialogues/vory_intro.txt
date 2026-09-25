@@ -1,29 +1,43 @@
 # Première rencontre avec Vory.
-# Syntaxe : voir Scripts/Dialogue/dialogue.gd (from_text).
+# Syntaxe : voir Dialogues/LISEZMOI.md.
+
+# Tant qu'il ne s'est pas présenté, Vory n'est qu'un « Robot étrange ». Le ?=
+# ne donne cette valeur que si la variable n'existe pas encore : si l'on a déjà
+# appris son nom, on le garde.
+$ vory ?= Robot étrange
 
 :: depart
-Robot étrange: Un humain dans ces ruines ? Étrange ce lieu ne devrait pas être accessible pourtant...
+{vory}: Un humain dans ces ruines ? Étrange ce lieu ne devrait pas être accessible pourtant...
 Bon pas grave ça faisait tellement longtemps que je n'avais reçu aucune visite, je suis si content d'avoir enfin de la visite.
-Robot étrange: Que fais-tu ici ?
+
+:: question
+{vory}: Que fais-tu ici ?
 - Oui, je me suis perdu. -> aide
 - Non, je passais juste. -> poli
-- Qui es-tu, d'abord ? -> presentation
+# Une fois qu'il s'est présenté, la question disparaît : on ne peut plus que
+# répondre à la sienne et avancer.
+- Qui es-tu, d'abord ? -> presentation [si vory != Vory]
 
 :: presentation
-Vory: Moi ? Je sui Vory, gardien de la connaissance de cette antique civilisation.
+{vory}: Moi ? Je sui Vory, gardien de la connaissance de cette antique civilisation.
+# À partir d'ici, il s'appelle Vory, dans ce dialogue comme dans tous les suivants.
+$ vory = Vory
 Enfin... aujourd'hui je erre et je m'ennuie, en plus ma mémoire a été altérée avec les années et j'ai tout perdu, plus aucune connaissance.
 Non pas exactement je crois me souvenir du temps que j'ai passé tout seul ici depuis que mes concepteurs m'aient abandonné
--> depart
+-> question
 
 :: aide
-Vory: Alors écoute bien : le chemin redescend derrière les arbres.
+{vory}: Alors écoute bien : le chemin redescend derrière les arbres.
 @ marqueur_chemin
-Vory: Ne traîne pas, la nuit tombe vite ici.
+{vory}: Ne traîne pas, la nuit tombe vite ici.
 -> fin
 
 :: poli
-Vory: Comme tu veux.
+{vory}: Comme tu veux.
 Fais attention où tu mets les pieds quand même.
 
 :: fin
-Vory: Bonne route.
+# La rencontre est faite : la prochaine fois, Vory passera à son discours
+# habituel. Sans cette ligne, il rejouerait cette première rencontre.
+>> vory_habituel
+{vory}: Bonne route.

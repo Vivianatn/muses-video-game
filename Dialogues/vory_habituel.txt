@@ -1,18 +1,30 @@
 # Ce que Vory dit à partir de la deuxième rencontre.
 # Rien à voir avec vory_intro.txt : il te connaît déjà.
+# Toi, en revanche, tu ne connais son nom que s'il te l'a donné : {vory} vaut
+# « Vory » ou « Robot étrange » selon ce qui s'est dit la première fois.
+$ vory ?= Robot étrange
 
-Vory: Re.
-Vory: Besoin de quelque chose ?
+{vory}: Re.
+
+:: question
+{vory}: Besoin de quelque chose ?
 - Non, je passais dire bonjour. -> bonjour
 - Redis-moi où est le chemin. -> chemin
+# Pour qui ne lui a pas demandé son nom la première fois.
+- Au fait, qui es-tu ? -> presentation [si vory != Vory]
+
+:: presentation
+{vory}: Je ne me suis pas présenté ? Je suis Vory.
+$ vory = Vory
+-> question
 
 :: bonjour
-Vory: C'est gentil. Va, ne t'attarde pas.
+{vory}: C'est gentil. Va, ne t'attarde pas.
 -> fin
 
 :: chemin
-Vory: Derrière les arbres, toujours.
+{vory}: Derrière les arbres, toujours.
 @ marqueur_chemin
 
 :: fin
-Vory: À plus tard.
+{vory}: À plus tard.

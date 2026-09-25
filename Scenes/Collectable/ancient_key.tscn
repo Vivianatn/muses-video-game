@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cpio0hay7m70m"]
+
+[ext_resource type="Script" uid="uid://ccsgxji2aayn" path="res://Scripts/Collectable/collectable.gd" id="0_coll"]
+[ext_resource type="Texture2D" uid="uid://dct6lolkt6ycy" path="res://Sprites/Elements/Ancient key/Object.png" id="1_e6ck7"]
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_e6ck7"]
+gradient = SubResource("Gradient_glow")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ew5ud"]
+radius = 11.0
+height = 46.0
+
+[node name="AncientKey" type="Area2D" unique_id=1180082677]
+texture_filter = 1
+scale = Vector2(0.5, 0.5)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("0_coll")
+item_id = &"ancient_key"
+
+[node name="Light" type="PointLight2D" parent="." unique_id=1910865303]
+color = Color(0.86688876, 0.8640692, 0.8628597, 1)
+energy = 0.25
+texture = SubResource("GradientTexture2D_e6ck7")
+texture_scale = 1.5
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=2035532492]
+texture = ExtResource("1_e6ck7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=227929824]
+shape = SubResource("CapsuleShape2D_ew5ud")

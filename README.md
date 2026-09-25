@@ -24,12 +24,18 @@ dynamique avec mode « concentration », et des niveaux construits au TileSet.
 | Tirer | Clic gauche ou F | ZR / RT |
 | S'agripper à un mur | Automatique au contact en l'air | Automatique |
 | Saut mural | Espace (le personnage se retourne seul) | A |
+| Parler à un PNJ | E | A |
+| Menu (pause, sauvegarde) | Échap | Start |
+| Inventaire | I | Select |
+| Retour dans les menus | Retour arrière | B |
 | Mode concentration (dézoom) | A (maintenir) | RB (maintenir) |
 | Regarder autour (en mode concentration) | ← → ↑ ↓ ou Z / Q / S / D | Stick gauche |
 
 Les touches sont définies dans **Projet → Paramètres du projet → Contrôles**
 (actions `move_left`, `move_right`, `look_up`, `look_down`, `jump`, `run`, `dash`,
-`camera_zoom_out`). Les touches clavier sont mappées par position physique, donc
+`camera_zoom_out`, `interact`, `menu`, `inventory`, `menu_back`). Quand une manette est branchée, les invites à
+l'écran (le « E » au-dessus des PNJ) affichent le bouton de la manette. Les
+touches clavier sont mappées par position physique, donc
 compatibles AZERTY et QWERTY.
 
 ## Fonctionnalités
@@ -225,3 +231,7 @@ généré automatiquement :
 ```
 sync.bat "Ajout du système de dash"
 ```
+
+## Menu, inventaire et sauvegarde
+
+Voir [`Scripts/Save/LISEZMOI.md`](Scripts/Save/LISEZMOI.md).

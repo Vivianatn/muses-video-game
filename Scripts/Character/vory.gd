@@ -1,9 +1,14 @@
+@tool
 extends CharacterBody2D
 class_name Vory
 
 ## Vory : personnage non joueur. Il est soumis à la gravité et erre au hasard
 ## (alternance marche / pause), en faisant demi-tour devant un mur ou au bord
 ## d'un vide pour ne jamais tomber d'une plateforme.
+##
+## Le script tourne aussi dans l'éditeur (@tool), uniquement pour afficher en
+## direct le décalage du sprite réglé dans le groupe « Sprite ». Tout le reste
+## (déplacement, errance) ne s'exécute qu'en jeu.
 
 enum State { IDLE, WALK }
 
@@ -44,6 +49,33 @@ enum State { IDLE, WALK }
 @export var idle_anim: StringName = &"idle"
 @export var walk_anim: StringName = &"walk"
 
+@export_group("Sprite")
+## Décalage et taille du sprite par animation, pour caler le dessin sur la
+## forme de collision quand les planches n'ont pas la même taille ou le même
+## cadrage. Voir SpriteFit.
+##  - Offset : X positif avance le sprite dans le sens où regarde le
+##    personnage, Y positif le descend.
+##  - Scale : 1 = taille d'origine, 1.5 = moitié plus grand. Les pieds restent
+##    en place ; seule l'image change de taille, pas la collision.
+## Se voit en direct dans l'éditeur : choisis l'animation dans
+## l'AnimatedSprite2D, puis règle-la ici.
+@export var idle_sprite_offset: Vector2 = Vector2.ZERO:
+	set(value):
+		idle_sprite_offset = value
+		_apply_sprite_offset()
+@export var walk_sprite_offset: Vector2 = Vector2.ZERO:
+	set(value):
+		walk_sprite_offset = value
+		_apply_sprite_offset()
+@export_range(0.1, 4.0, 0.01) var idle_sprite_scale: float = 1.0:
+	set(value):
+		idle_sprite_scale = value
+		_apply_sprite_offset()
+@export_range(0.1, 4.0, 0.01) var walk_sprite_scale: float = 1.0:
+	set(value):
+		walk_sprite_scale = value
+		_apply_sprite_offset()
+
 @onready var sprite: AnimatedSprite2D = $Sprite
 @onready var collision: CollisionShape2D = $Body
 @onready var ground_check: RayCast2D = $GroundCheck
@@ -63,6 +95,12 @@ var _wall_check_length: float = 0.0
 
 
 func _ready() -> void:
+	_apply_sprite_offset()
+	if Engine.is_editor_hint():
+		return
+	# _process ne sert qu'à l'aperçu dans l'éditeur.
+	set_process(false)
+
 	_spawn_x = global_position.x
 	_place_probes()
 	state_timer.timeout.connect(_on_state_timer_timeout)
@@ -74,7 +112,17 @@ func _ready() -> void:
 	_enter_state(State.WALK)
 
 
+func _process(_delta: float) -> void:
+	# Dans l'éditeur, on suit l'animation choisie dans l'AnimatedSprite2D pour
+	# montrer le bon décalage quand on passe de idle à walk.
+	if Engine.is_editor_hint():
+		_apply_sprite_offset()
+
+
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 		velocity.y = minf(velocity.y, max_fall_speed)
@@ -194,6 +242,8 @@ func _place_probes() -> void:
 
 func _apply_direction() -> void:
 	sprite.flip_h = _direction < 0.0
+	# Le décalage en X suit le sens du regard : flip_h ne le retourne pas.
+	_apply_sprite_offset()
 	ground_check.position.x = collision.position.x + _ground_check_offset * _direction
 	wall_check.target_position.x = _wall_check_length * _direction
 
@@ -239,3 +289,23 @@ func _play(anim: StringName) -> void:
 		return
 	if sprite.animation != anim:
 		sprite.play(anim)
+		_apply_sprite_offset()
+
+
+## Recale le sprite selon l'animation en cours (voir le groupe « Sprite »).
+func _apply_sprite_offset() -> void:
+	# Le setter d'un réglage peut être appelé au chargement, avant _ready.
+	var node := get_node_or_null(^"Sprite") as AnimatedSprite2D
+	if node == null:
+		return
+
+	var off := Vector2.ZERO
+	var size := 1.0
+	if node.animation == walk_anim:
+		off = walk_sprite_offset
+		size = walk_sprite_scale
+	elif node.animation == idle_anim:
+		off = idle_sprite_offset
+		size = idle_sprite_scale
+
+	SpriteFit.apply(node, off, size, -1.0 if node.flip_h else 1.0)

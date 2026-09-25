@@ -26,6 +26,11 @@ signal choice_selected(index: int)
 ## Actions qui font avancer le dialogue. Celles qui n'existent pas dans la
 ## carte d'entrées du projet sont simplement ignorées.
 @export var advance_actions: Array[StringName] = [&"interact", &"ui_accept", &"jump"]
+## Actions qui remontent d'une option quand des choix sont affichés. Les
+## actions du jeu y sont pour que le stick de la manette marche aussi.
+@export var choice_up_actions: Array[StringName] = [&"ui_up", &"look_up"]
+## Actions qui descendent d'une option quand des choix sont affichés.
+@export var choice_down_actions: Array[StringName] = [&"ui_down", &"look_down"]
 
 @export_group("Distribution")
 ## Portrait par personnage : la clé est le nom écrit dans le dialogue.
@@ -87,6 +92,7 @@ func _process(delta: float) -> void:
 	# Recalculé en continu : le RichTextLabel ne connaît sa hauteur définitive
 	# qu'après la mise en page, soit une frame après avoir reçu son texte.
 	_fit_height()
+	_navigate_choices()
 
 	if _typing:
 		_typed += _speed * delta
@@ -109,13 +115,22 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible_now() or _line == null:
 		return
-	# Quand des choix sont affichés, ce sont les boutons qui reçoivent l'entrée.
-	if not choices_box.get_children().is_empty():
-		return
 	if not _is_advance_pressed(event):
 		return
 
 	get_viewport().set_input_as_handled()
+
+	# Choix affichés : on valide l'option sélectionnée. Le bouton gère lui-même
+	# ui_accept (Entrée, Espace) ; ici arrivent les autres, dont A à la manette.
+	if not choices_box.get_children().is_empty():
+		var focused := get_viewport().gui_get_focus_owner() as Button
+		if focused == null or focused.get_parent() != choices_box:
+			# Sélection perdue (clic à côté...) : on la remet sur la première
+			# option, sans valider un choix que le joueur ne voyait pas.
+			(choices_box.get_child(0) as Button).grab_focus()
+			return
+		focused.pressed.emit()
+		return
 
 	if _typing and allow_skip_typing:
 		_finish_typing()
@@ -182,20 +197,33 @@ func _apply_speaker(line: DialogueLine) -> void:
 	speaker_label.text = line.speaker
 
 	var color := default_speaker_color
-	if speaker_colors.has(line.speaker):
-		color = speaker_colors[line.speaker]
+	var cast_name := _cast_name(line)
+	if speaker_colors.has(cast_name):
+		color = speaker_colors[cast_name]
 	# La réplique peut imposer sa couleur ; alpha à 0 = « laisse la distribution ».
 	if line.speaker_color.a > 0.0:
 		color = line.speaker_color
 	speaker_label.add_theme_color_override(&"font_color", color)
 
 	var texture := line.portrait
-	if texture == null and portraits.has(line.speaker):
-		texture = portraits[line.speaker]
+	if texture == null and portraits.has(cast_name):
+		texture = portraits[cast_name]
 	portrait_rect.texture = texture
 	portrait_rect.visible = texture != null
 	if texture != null and portrait_size != Vector2.ZERO:
 		portrait_rect.custom_minimum_size = portrait_size
+
+
+## Nom sous lequel chercher le personnage dans Portraits et Speaker Colors.
+## Le nom affiché d'abord (« Vory »), sinon celui de la variable qui le porte
+## (« vory » pour `{vory}`) : on garde ainsi le même portrait sous « Robot
+## étrange » en déclarant l'entrée sous le nom de la variable.
+func _cast_name(line: DialogueLine) -> String:
+	if portraits.has(line.speaker) or speaker_colors.has(line.speaker):
+		return line.speaker
+	if not line.speaker_key.is_empty():
+		return line.speaker_key
+	return line.speaker
 
 
 func _finish_typing() -> void:
@@ -227,12 +255,47 @@ func _build_choices(choices: Array[DialogueChoice]) -> void:
 		button.add_theme_font_size_override(&"font_size", choice_size)
 		button.pressed.connect(_on_choice_pressed.bind(i))
 		choices_box.add_child(button)
+		# La navigation entre options passe par _navigate_choices() : on coupe
+		# celle de Godot, sinon les flèches déplaceraient la sélection deux fois.
+		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+			button.set_focus_neighbor(side, ^".")
+		button.focus_next = ^"."
+		button.focus_previous = ^"."
 
 	choices_box.visible = true
 	# Le premier bouton prend le focus : le dialogue reste jouable au clavier
 	# et à la manette, sans obliger à viser à la souris.
 	if choices_box.get_child_count() > 0:
 		(choices_box.get_child(0) as Button).grab_focus()
+
+
+## Monte ou descend d'une option, au clavier comme au stick ou à la croix.
+## Lu à chaque frame plutôt qu'en _unhandled_input : le stick envoie un flot
+## d'événements tant qu'il est penché, alors qu'on ne veut bouger que d'un cran.
+func _navigate_choices() -> void:
+	var count := choices_box.get_child_count()
+	if count == 0:
+		return
+
+	var step := 0
+	if _any_just_pressed(choice_up_actions):
+		step -= 1
+	if _any_just_pressed(choice_down_actions):
+		step += 1
+	if step == 0:
+		return
+
+	var focused := get_viewport().gui_get_focus_owner()
+	var current := focused.get_index() if focused != null and focused.get_parent() == choices_box else 0
+	# On boucle : descendre depuis la dernière option ramène à la première.
+	(choices_box.get_child(posmod(current + step, count)) as Button).grab_focus()
+
+
+func _any_just_pressed(actions: Array[StringName]) -> bool:
+	for action in actions:
+		if InputMap.has_action(action) and Input.is_action_just_pressed(action):
+			return true
+	return false
 
 
 func _on_choice_pressed(index: int) -> void:

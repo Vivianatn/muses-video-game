@@ -45,10 +45,105 @@ Vory: Bonne route.
 | `-> etiquette` | Saute là. |
 | `- texte -> etiquette` | Option (se raccroche à la réplique juste au-dessus). L'étiquette est facultative. |
 | `@ nom argument` | Émet `Dialogues.event(nom, argument)`. |
+| `$ nom = valeur` | Donne une valeur à une variable (voir plus bas). |
+| `$ nom ?= valeur` | Pareil, mais seulement si la variable n'existe pas encore. |
+| `$ nom += 1` | Ajoute un nombre à une variable. |
+| `{nom}` | Affiche la valeur d'une variable, dans un nom, une réplique ou un choix. |
+| `... [si condition]` | En fin de n'importe quelle ligne : elle n'existe que si la condition est vraie (voir plus bas). |
+| `>> conversation` | Choisit la conversation que le PNJ tiendra la prochaine fois (voir plus bas). |
 | `# ...` | Commentaire. Pour un vrai `#`, écris `\#`. |
 | ligne vide | Rien, juste de l'aération. |
 
 Le texte accepte le BBCode : `[b]gras[/b]`, `[color=red]…[/color]`, `[shake]…[/shake]`.
+
+## Variables
+
+Une variable garde une valeur qui peut changer au fil de la conversation, et
+qui **reste d'une conversation à l'autre** : ce qu'on apprend à la première
+rencontre est encore vrai à la deuxième. Le cas typique, c'est un PNJ dont on
+ne connaît pas le nom tant qu'il ne s'est pas présenté :
+
+```
+$ vory ?= Robot étrange       # valeur de départ, si on ne sait encore rien
+
+{vory}: Bonjour, étranger.     # affiché « Robot étrange: Bonjour, étranger. »
+- Qui es-tu ? -> presentation
+- Au revoir. -> fin
+
+:: presentation
+{vory}: Je m'appelle Vory.     # encore « Robot étrange » : il le dit à l'instant
+$ vory = Vory
+Enchanté.                      # désormais « Vory », ici et dans tous les dialogues suivants
+
+:: fin
+{vory}: À bientôt.             # « Vory » ou « Robot étrange », selon la branche prise
+```
+
+- **`=`** remplace la valeur. **`?=`** ne sert que la première fois : pose-le
+  en haut de chaque fichier où le PNJ parle, il n'écrasera jamais un nom déjà
+  appris. **`+=`** ajoute un nombre (`$ visites += 1`), pratique pour compter.
+- **`{nom}`** marche partout : nom du personnage, texte des répliques, texte
+  des choix, argument d'un `@ événement`. Une variable inconnue reste écrite
+  telle quelle (`{vroy}`), pour que la faute de frappe se voie à l'écran.
+- Le nom d'une variable : lettres sans accent, chiffres et `_`, sans espace.
+- **Portraits et couleurs** : la boîte cherche d'abord le nom affiché
+  (« Vory »), puis le nom de la variable (« vory »). Déclare l'entrée sous
+  `vory` dans *Portraits* / *Speaker Colors* pour que le personnage garde son
+  visage même quand il s'appelle encore « Robot étrange ».
+
+Les variables vivent en mémoire tant que le jeu tourne. Pour les lire, les
+modifier ou les sauvegarder depuis un script :
+
+```gdscript
+Dialogues.get_var(&"vory", "Robot étrange")  # valeur, ou celle par défaut
+Dialogues.set_var(&"vory", "Vory")           # ex. apprise ailleurs dans le jeu
+Dialogues.has_var(&"vory")
+Dialogues.get_vars()                         # tout, pour une sauvegarde
+Dialogues.clear_vars()                       # nouvelle partie
+Dialogues.variable_changed.connect(func(nom, valeur): print(nom, " = ", valeur))
+```
+
+## Conditions
+
+Ajoute `[si condition]` à la fin d'une ligne pour qu'elle n'existe que si la
+condition est vraie. Ça marche sur **toutes** les lignes : options, répliques,
+sauts, variables, événements, `>>`.
+
+```
+{vory}: Que fais-tu ici ?
+- Je me suis perdu. -> aide
+- Qui es-tu ? -> presentation [si vory != Vory]   # disparaît une fois qu'on connaît son nom
+
+{vory}: Encore toi ! [si visites >= 3]            # réplique affichée seulement à partir de la 3e visite
+-> raccourci [si chemin_montre]                   # saut seulement si la variable est vraie
+```
+
+| Condition | Vraie quand |
+| --- | --- |
+| `nom == valeur` / `nom != valeur` | La variable vaut / ne vaut pas cette valeur (texte ou nombre). |
+| `nom < 3`, `nom > 3`, `nom <= 3`, `nom >= 3` | Comparaison de nombres. Fausse si la variable n'existe pas. |
+| `nom` | La variable existe et ne vaut ni `0`, ni vide, ni `non` / `faux`. |
+| `pas condition` | L'inverse (`pas chemin_montre`, `pas vory == Vory`). |
+
+- Une **option** dont la condition est fausse n'est pas proposée. Si toutes les
+  options d'une réplique sont masquées, la réplique se valide normalement et
+  le dialogue continue à la ligne suivante.
+- Une **réplique** dont la condition est fausse est sautée avec tout ce qui
+  s'y rattache : ses options, son saut.
+- La valeur à droite peut contenir des `{nom}` : `[si score >= {record}]`.
+- Seuls les crochets qui commencent par `si` sont des conditions : le BBCode en
+  fin de ligne (`[/b]`, `[/color]`) reste du texte.
+
+Pour qu'une option ne soit proposée qu'**une seule fois**, combine-la avec une
+variable :
+
+```
+- Parle-moi de la forêt. -> foret [si pas foret_racontee]
+
+:: foret
+$ foret_racontee = oui
+{vory}: Elle est plus vieille que moi...
+```
 
 ## Poser un dialogue dans un niveau
 
@@ -107,6 +202,29 @@ complètement différents :
 Pour ajouter une troisième conversation — par exemple après une quête —,
 ajoute simplement un fichier à la liste.
 
+### Laisser le dialogue décider : `>>`
+
+Par défaut (**Auto Advance** coché), le PNJ passe à la conversation suivante
+chaque fois qu'on lui a parlé. Décoche **Auto Advance** et c'est le dialogue
+qui décide, avec une ligne `>>` : tant qu'il ne l'a pas dit, le PNJ répète la
+même conversation.
+
+```
+>> suivante          # celle qui suit dans la liste Dialogue Files
+>> 2                 # la 2e de la liste (on compte à partir de 1)
+>> vory_habituel     # par nom de fichier, sans « .txt » ni chemin
+>> 3 [si vory == Vory]   # avec une condition, comme n'importe quelle ligne
+```
+
+La ligne prend effet **au prochain contact** : la conversation en cours va
+jusqu'au bout. Place-la dans la branche qui doit faire avancer le PNJ, par
+exemple à la fin d'une quête, et pas dans celle où le joueur refuse de
+l'écouter. Même avec Auto Advance coché, une ligne `>>` a le dernier mot. En
+mode `RANDOM`, elle n'a pas d'effet : la conversation est tirée au hasard.
+
+Vory est réglé ainsi dans `scene_test` : sa première rencontre se termine par
+`>> vory_habituel`.
+
 ### Choisir la conversation depuis un script
 
 Le rang courant vit en mémoire : si tu recharges la scène, le PNJ repart de sa
@@ -116,7 +234,8 @@ première conversation. Pour le piloter (sauvegarde, avancement de quête) :
 var vory_trigger := $Vory/DialogueTrigger
 
 vory_trigger.get_next_dialogue()   # le rang qui sera joué au prochain contact
-vory_trigger.set_next_dialogue(2)  # le faire passer à sa 3e conversation
+vory_trigger.set_next_dialogue(2)  # le faire passer à sa 3e conversation (on compte à partir de 0 ici)
+vory_trigger.request_next_dialogue("vory_habituel")  # comme `>> vory_habituel`
 vory_trigger.reset()               # tout reprendre au début
 ```
 
@@ -176,7 +295,11 @@ func _on_dialogue_finished(_dialogue: Dialogue) -> void:
     Dialogues.get_context()  # le déclencheur qui a lancé la conversation
 ```
 
-Signaux disponibles : `started`, `finished`, `line_shown`, `choice_made`, `event`.
+Signaux disponibles : `started`, `finished`, `line_shown`, `choice_made`, `event`,
+`variable_changed`, `next_dialogue_requested`.
+
+`Dialogues.check("vory == Vory")` évalue une condition depuis un script, avec
+la même écriture que `[si ...]`.
 
 ## Personnaliser l'apparence
 

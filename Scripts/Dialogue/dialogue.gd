@@ -39,7 +39,11 @@ func is_empty() -> bool:
 ##     :: aide
 ##     Vory: Alors suis-moi.
 ##     @ donne_carte               # événement envoyé au jeu
-##     -> fin                      # saut inconditionnel
+##     $ vory = Vory               # variable (?= valeur de départ, += ajout)
+##     {vory}: On se connaît.      # {nom} affiche la valeur d'une variable
+##     -> fin                      # saut
+##     - Qui es-tu ? [si vory != Vory]   # condition, sur n'importe quelle ligne
+##     >> vory_habituel            # conversation que le PNJ tiendra la prochaine fois
 ##
 ##     :: fin
 ##     Vory: À bientôt !
@@ -61,10 +65,24 @@ static func from_text(source: String) -> Dialogue:
 			pending_id = StringName(line.substr(2).strip_edges())
 			continue
 
-		# -> saut inconditionnel
+		# ... [si condition] : possible sur toutes les sortes de ligne ci-dessous.
+		var condition := _take_condition(line)
+		if not condition.is_empty():
+			line = line.substr(0, line.rfind("[")).strip_edges()
+
+		# >> conversation que le PNJ tiendra la prochaine fois
+		if line.begins_with(">>"):
+			var next := DialogueLine.new()
+			next.next_dialogue = line.substr(2).strip_edges()
+			next.condition = condition
+			pending_id = _attach(dialogue, next, pending_id)
+			continue
+
+		# -> saut
 		if line.begins_with("->"):
 			var jump := DialogueLine.new()
 			jump.goto = StringName(line.substr(2).strip_edges())
+			jump.condition = condition
 			pending_id = _attach(dialogue, jump, pending_id)
 			continue
 
@@ -75,7 +93,18 @@ static func from_text(source: String) -> Dialogue:
 			var ev := DialogueLine.new()
 			ev.event = StringName(body if space < 0 else body.substr(0, space))
 			ev.event_arg = "" if space < 0 else body.substr(space + 1).strip_edges()
+			ev.condition = condition
 			pending_id = _attach(dialogue, ev, pending_id)
+			continue
+
+		# $ variable = valeur   (ou ?= pour une valeur de départ, += pour ajouter)
+		if line.begins_with("$"):
+			var assign := _parse_var(line.substr(1).strip_edges())
+			if assign == null:
+				push_warning("Dialogue : variable mal écrite, ignorée (%s)." % line)
+				continue
+			assign.condition = condition
+			pending_id = _attach(dialogue, assign, pending_id)
 			continue
 
 		# - choix -> etiquette : il se raccroche à la dernière réplique écrite.
@@ -87,6 +116,7 @@ static func from_text(source: String) -> Dialogue:
 				choice.goto = StringName(label.substr(arrow + 2).strip_edges())
 				label = label.substr(0, arrow).strip_edges()
 			choice.text = label
+			choice.condition = condition
 			if dialogue.lines.is_empty():
 				push_warning("Dialogue : un choix arrive avant toute réplique, ignoré.")
 				continue
@@ -102,6 +132,7 @@ static func from_text(source: String) -> Dialogue:
 		else:
 			entry.text = line
 		entry.speaker = last_speaker
+		entry.condition = condition
 		pending_id = _attach(dialogue, entry, pending_id)
 
 	return dialogue
@@ -121,6 +152,48 @@ static func _attach(dialogue: Dialogue, line: DialogueLine, pending_id: StringNa
 	return &""
 
 
+## Condition écrite en fin de ligne, « ... [si vory != Vory] », ou "" s'il n'y
+## en a pas. Seuls les crochets qui commencent par « si » comptent : le BBCode
+## ([b], [color=red]...) reste du texte.
+static func _take_condition(line: String) -> String:
+	if not line.ends_with("]"):
+		return ""
+	var open := line.rfind("[")
+	if open < 0:
+		return ""
+	var inside := line.substr(open + 1, line.length() - open - 2).strip_edges()
+	if not inside.begins_with("si "):
+		return ""
+	return inside.substr(3).strip_edges()
+
+
+## Lit « nom = valeur », « nom ?= valeur » ou « nom += nombre ». Renvoie null
+## si la ligne ne ressemble à rien de tout ça.
+static func _parse_var(body: String) -> DialogueLine:
+	var equal := body.find("=")
+	if equal <= 0:
+		return null
+
+	var line := DialogueLine.new()
+	var name_end := equal
+	match body[equal - 1]:
+		"?":
+			line.var_op = DialogueLine.VarOp.DEFAULT
+			name_end -= 1
+		"+":
+			line.var_op = DialogueLine.VarOp.ADD
+			name_end -= 1
+		_:
+			line.var_op = DialogueLine.VarOp.SET
+
+	var var_name := body.substr(0, name_end).strip_edges()
+	if not var_name.is_valid_identifier():
+		return null
+	line.var_name = StringName(var_name)
+	line.var_value = body.substr(equal + 1).strip_edges()
+	return line
+
+
 ## Position du ":" qui sépare le nom du texte, ou -1 s'il n'y en a pas.
 ## On n'accepte qu'un nom court et sans ponctuation, pour que "Attention : un
 ## piège !" reste une phrase et ne devienne pas un personnage nommé "Attention".
@@ -130,7 +203,8 @@ static func _speaker_colon(line: String) -> int:
 		return -1
 	var name_part := line.substr(0, colon)
 	for c in name_part:
-		if not (c.is_valid_identifier() or c == " " or c == "-" or c == "'" or c.unicode_at(0) > 127):
+		# Les accolades permettent un nom tiré d'une variable : « {vory}: ... ».
+		if not (c.is_valid_identifier() or c in [" ", "-", "'", "{", "}"] or c.unicode_at(0) > 127):
 			return -1
 	return colon
 

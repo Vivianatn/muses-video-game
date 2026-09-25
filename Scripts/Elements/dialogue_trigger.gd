@@ -42,6 +42,11 @@ enum RepeatMode {
 @export_file("*.txt") var dialogue_files: Array[String] = []
 ## Ce qui se passe une fois la liste épuisée.
 @export var repeat_mode: RepeatMode = RepeatMode.SEQUENCE
+## Passer tout seul à la conversation suivante chaque fois qu'on a parlé au
+## PNJ. Décoche pour que ce soit le dialogue qui décide, avec une ligne
+## « >> ... » : tant qu'il ne l'a pas dit, le PNJ répète la même conversation.
+## Qu'elle soit cochée ou non, une ligne « >> ... » a toujours le dernier mot.
+@export var auto_advance: bool = true
 
 @export_group("Déclenchement")
 ## Partir dès que le joueur entre, sans qu'il ait à appuyer sur une touche.
@@ -63,8 +68,11 @@ enum RepeatMode {
 @export var speaker_faces_player: bool = true
 
 @export_group("Invite")
-## Petit texte flottant affiché quand le joueur peut parler.
+## Petit texte flottant affiché quand le joueur peut parler, au clavier.
 @export var prompt_text: String = "E"
+## Le même texte quand une manette est branchée. Elle a la priorité sur le
+## clavier : c'est celui-ci qui s'affiche dès qu'une manette est détectée.
+@export var prompt_text_gamepad: String = "A"
 ## Taille du texte de l'invite.
 @export_range(8, 72, 1) var prompt_size: int = 30
 ## Cacher complètement l'invite (utile en auto_start).
@@ -87,22 +95,30 @@ var _player: Node2D = null
 var _played: bool = false
 ## Rang de la prochaine conversation à jouer dans dialogue_files.
 var _next: int = 0
+## Rang de la conversation en cours, pour savoir laquelle est « la suivante ».
+var _playing: int = 0
 var _cooldown_timer: float = 0.0
 var _running: bool = false
+## L'autoload InputDevice, cherché par son chemin plutôt que par son nom : le
+## script compile même si l'éditeur ne connaît pas encore l'autoload.
+var _input_device: Node = null
 
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	Dialogues.finished.connect(_on_dialogue_finished)
+	# Reprend l'avancement des conversations de la partie chargée.
+	SaveGame.register(self)
+	_input_device = get_node_or_null(^"/root/InputDevice")
+	if _input_device != null:
+		_input_device.connect(&"changed", _on_input_device_changed)
+	else:
+		push_warning("DialogueTrigger : autoload InputDevice absent, l'invite reste celle du clavier.")
 
-	prompt.text = prompt_text
 	prompt.add_theme_font_size_override(&"font_size", prompt_size)
-	# La taille du Label suit son texte : _update_prompt_position() s'en sert
-	# pour centrer l'invite sur la tête du PNJ.
-	prompt.reset_size()
+	_refresh_prompt_text()
 	prompt.visible = false
-	_update_prompt_position()
 
 
 func _process(delta: float) -> void:
@@ -159,6 +175,45 @@ func get_next_dialogue() -> int:
 ## Vory directement à sa troisième conversation.
 func set_next_dialogue(index: int) -> void:
 	_next = clampi(index, 0, maxi(dialogue_files.size() - 1, 0))
+
+
+## Appelée par l'autoload Dialogues quand la conversation contient une ligne
+## « >> ... ». `target` vaut :
+##  - « suivante » : celle qui suit la conversation en cours dans la liste ;
+##  - un rang compté à partir de 1 : « 2 » = la deuxième de Dialogue Files ;
+##  - un nom de fichier, avec ou sans « .txt » ni chemin : « vory_habituel ».
+## Prend effet au prochain contact : la conversation en cours va à son terme.
+func request_next_dialogue(target: String) -> void:
+	if dialogue_files.is_empty():
+		push_warning("DialogueTrigger (%s) : « >> %s » ignoré, Dialogue Files est vide." % [name, target])
+		return
+
+	var wanted := target.strip_edges()
+	if wanted.to_lower() in ["suivante", "suivant"]:
+		_next = _following(_playing)
+		return
+	if wanted.is_valid_int():
+		set_next_dialogue(wanted.to_int() - 1)
+		return
+
+	for i in dialogue_files.size():
+		var path := dialogue_files[i]
+		if path == wanted or path.get_file() == wanted or path.get_file().get_basename() == wanted:
+			_next = i
+			return
+
+	push_warning("DialogueTrigger (%s) : « >> %s » ne correspond à aucune conversation de Dialogue Files." % [name, target])
+
+
+# --- Sauvegarde -----------------------------------------------------------
+
+func save_state() -> Dictionary:
+	return {"next": _next, "played": _played}
+
+
+func load_state(data: Dictionary) -> void:
+	_next = int(data.get("next", _next))
+	_played = bool(data.get("played", _played))
 
 
 # --- Détail ---------------------------------------------------------------
@@ -244,22 +299,42 @@ func _hold_speaker(held: bool) -> void:
 ## Renvoie le fichier à jouer maintenant et prépare le suivant.
 func _take_next_file() -> String:
 	if repeat_mode == RepeatMode.RANDOM:
-		return dialogue_files[randi() % dialogue_files.size()]
+		_playing = randi() % dialogue_files.size()
+		return dialogue_files[_playing]
 
+	_playing = clampi(_next, 0, dialogue_files.size() - 1)
+	# Préparé dès maintenant : une ligne « >> ... » pendant la conversation
+	# pourra encore le remplacer.
+	if auto_advance:
+		_next = _following(_playing)
+	return dialogue_files[_playing]
+
+
+## Rang de la conversation qui suit `index`, selon repeat_mode.
+func _following(index: int) -> int:
 	var last := dialogue_files.size() - 1
-	var path := dialogue_files[clampi(_next, 0, last)]
-
-	_next += 1
-	if repeat_mode == RepeatMode.LOOP and _next > last:
-		_next = 0
-	else:
-		# En SEQUENCE, on s'arrête sur la dernière : c'est elle qui se répète.
-		_next = mini(_next, last)
-
-	return path
+	if repeat_mode == RepeatMode.LOOP and index >= last:
+		return 0
+	# En SEQUENCE, on s'arrête sur la dernière : c'est elle qui se répète.
+	return mini(index + 1, last)
 
 
 # --- Invite ---------------------------------------------------------------
+
+## Affiche la touche du clavier ou le bouton de la manette, selon ce qui est
+## branché.
+func _refresh_prompt_text() -> void:
+	var gamepad: bool = _input_device != null and _input_device.call(&"is_gamepad")
+	prompt.text = prompt_text_gamepad if gamepad else prompt_text
+	# La taille du Label suit son texte : _update_prompt_position() s'en sert
+	# pour centrer l'invite sur la tête du PNJ.
+	prompt.reset_size()
+	_update_prompt_position()
+
+
+func _on_input_device_changed(_gamepad: bool) -> void:
+	_refresh_prompt_text()
+
 
 ## Pose le « E » juste au-dessus de la tête de l'interlocuteur, centré sur lui.
 func _update_prompt_position() -> void:

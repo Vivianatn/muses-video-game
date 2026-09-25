@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://t8fhiq7bb7qt"]
+
+[ext_resource type="Script" uid="uid://bn6oo77ce8xwd" path="res://Scripts/Items/item_data.gd" id="1_rmp1c"]
+[ext_resource type="Texture2D" uid="uid://dct6lolkt6ycy" path="res://Sprites/Elements/Ancient key/Object.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_rmp1c")
+id = &"ancient_key"
+display_name = "Clé ancienne"
+description = "Une clé très ancienne et servant probablement à ouvrir une porte mystérieuse et importante, mais laquelle ?"
+icon = ExtResource("2_icon")
+max_count = 1
+sort_order = 10
+dialogue_var = &"cle_ancienne"
+metadata/_custom_type_script = "uid://bn6oo77ce8xwd"
