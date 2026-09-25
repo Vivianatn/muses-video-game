@@ -208,6 +208,8 @@ var _sprint_release_timer: float = 0.0
 var _zoom_hold_timer: float = 0.0
 var _base_zoom: float = 1.0
 var _zoom_out_active: bool = false
+# Entrées neutralisées de l'extérieur (dialogue, cinématique...).
+var _input_locked: bool = false
 # Direction verrouillée pendant le balayage caméra (ZERO = aucune).
 var _pan_lock: Vector2 = Vector2.ZERO
 # Distance entre le centre du joueur et le bord de sa collision.
@@ -250,6 +252,24 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		_clamp_to_left_wall()
 		# Pas d'animation de dégât pour l'instant : on garde la pose en cours.
+		_was_on_floor = on_floor
+		return
+
+	if _input_locked:
+		# Dialogue ou cinématique : il finit sa chute puis reste planté, sans
+		# répondre aux touches. On garde la gravité pour ne pas le laisser
+		# suspendu en l'air.
+		_apply_gravity(delta)
+		velocity.x = move_toward(velocity.x, 0.0, friction * delta)
+		_is_sprinting = false
+		_jump_buffer_timer = 0.0
+		_dash_timer = 0.0
+		_is_wall_grabbing = false
+		_cancel_pending_fire()
+		move_and_slide()
+		_clamp_to_left_wall()
+		if on_floor:
+			_play(&"idle")
 		_was_on_floor = on_floor
 		return
 
@@ -795,3 +815,17 @@ func _pan_action(dir: Vector2) -> StringName:
 		Vector2.RIGHT: return &"move_right"
 		Vector2.UP: return &"look_up"
 		_: return &"look_down"
+
+
+## Coupe ou rend le contrôle au joueur. Appelée par l'autoload Dialogues
+## pendant une conversation, et utilisable pour toute cinématique.
+func set_input_locked(locked: bool) -> void:
+	_input_locked = locked
+	if locked:
+		_is_sprinting = false
+		_jump_buffer_timer = 0.0
+		_cancel_pending_fire()
+
+
+func is_input_locked() -> bool:
+	return _input_locked

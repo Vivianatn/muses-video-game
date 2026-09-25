@@ -191,6 +191,7 @@ size = Vector2(28, 44)
 scale = Vector2(1.4, 1.4)
 collision_layer = 4
 script = ExtResource("1_walker")
+attack_recovery = 0.2
 attack_cooldown = 1.0
 idle_sprite_offset = Vector2(0, 2)
 walk_sprite_offset = Vector2(0, 1.5)

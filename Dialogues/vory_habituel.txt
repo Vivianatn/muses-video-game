@@ -1,0 +1,18 @@
+# Ce que Vory dit à partir de la deuxième rencontre.
+# Rien à voir avec vory_intro.txt : il te connaît déjà.
+
+Vory: Re.
+Vory: Besoin de quelque chose ?
+- Non, je passais dire bonjour. -> bonjour
+- Redis-moi où est le chemin. -> chemin
+
+:: bonjour
+Vory: C'est gentil. Va, ne t'attarde pas.
+-> fin
+
+:: chemin
+Vory: Derrière les arbres, toujours.
+@ marqueur_chemin
+
+:: fin
+Vory: À plus tard.

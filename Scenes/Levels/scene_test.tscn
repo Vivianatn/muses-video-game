@@ -3,6 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://cpwdumejlaf3s" path="res://Scenes/Tilesets/Forest_tileset.tscn" id="1_5on7j"]
 [ext_resource type="PackedScene" uid="uid://cpcdehjljw64s" path="res://Scenes/Character/player.tscn" id="1_pdl4h"]
 [ext_resource type="PackedScene" uid="uid://dk24cr58sl0u2" path="res://Scenes/Ennemies/ennemy_walker.tscn" id="3_e8slb"]
+[ext_resource type="PackedScene" uid="uid://dbn4lhy8brojs" path="res://Scenes/Character/vory.tscn" id="4_1klcj"]
+[ext_resource type="PackedScene" uid="uid://cdlgtrg0muses" path="res://Scenes/Elements/dialogue_trigger.tscn" id="5_dtrg"]
 
 [node name="Scene_test" type="Node2D" unique_id=66472888]
 
@@ -17,3 +19,10 @@ position = Vector2(2321, 416)
 
 [node name="EnnemyWalker" parent="." unique_id=2001834584 instance=ExtResource("3_e8slb")]
 position = Vector2(3989, 403)
+
+[node name="Vory" parent="." unique_id=1594986491 instance=ExtResource("4_1klcj")]
+position = Vector2(1588, 374)
+
+[node name="DialogueTrigger" parent="Vory" unique_id=269065213 instance=ExtResource("5_dtrg")]
+dialogue_files = Array[String](["res://Dialogues/vory_intro.txt", "res://Dialogues/vory_habituel.txt"])
+prompt_margin = 10.0

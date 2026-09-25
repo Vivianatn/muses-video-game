@@ -1,0 +1,111 @@
+[gd_scene format=3 uid="uid://dbn4lhy8brojs"]
+
+[ext_resource type="Texture2D" uid="uid://dtae620b1106f" path="res://Sprites/Vory/Idle/South-East_0001.png" id="1_dyl28"]
+[ext_resource type="Script" uid="uid://635m1d7pw2aa" path="res://Scripts/Character/vory.gd" id="1_vory"]
+[ext_resource type="Texture2D" uid="uid://b226voyqi5aa1" path="res://Sprites/Vory/Idle/South-East_0002.png" id="2_q6sjb"]
+[ext_resource type="Texture2D" uid="uid://ceh3ms284l57j" path="res://Sprites/Vory/Idle/South-East_0003.png" id="3_5xv3o"]
+[ext_resource type="Texture2D" uid="uid://cqfshqm8vr2a" path="res://Sprites/Vory/Idle/South-East_0004.png" id="4_tuq88"]
+[ext_resource type="Texture2D" uid="uid://c0h0qwy2pqeq5" path="res://Sprites/Vory/Idle/South-East_0005.png" id="5_ypsxg"]
+[ext_resource type="Texture2D" uid="uid://dp8678ds6r15s" path="res://Sprites/Vory/Idle/South-East_0006.png" id="6_d0tn8"]
+[ext_resource type="Texture2D" uid="uid://ca0r7vuvhfh8t" path="res://Sprites/Vory/Idle/South-East_0007.png" id="7_ruim3"]
+[ext_resource type="Texture2D" uid="uid://b2gnjcg740wyg" path="res://Sprites/Vory/Idle/South-East_0008.png" id="8_gbjpv"]
+[ext_resource type="Texture2D" uid="uid://dnj78apktxwph" path="res://Sprites/Vory/Walk/South-East_0001.png" id="9_15kw8"]
+[ext_resource type="Texture2D" uid="uid://daom545yf45wj" path="res://Sprites/Vory/Walk/South-East_0002.png" id="10_8qivu"]
+[ext_resource type="Texture2D" uid="uid://b748hp8yaenf4" path="res://Sprites/Vory/Walk/South-East_0003.png" id="11_jfyw4"]
+[ext_resource type="Texture2D" uid="uid://lqssrjmlka2p" path="res://Sprites/Vory/Walk/South-East_0004.png" id="12_jtd47"]
+[ext_resource type="Texture2D" uid="uid://cndsl0odpihnt" path="res://Sprites/Vory/Walk/South-East_0005.png" id="13_raxv8"]
+[ext_resource type="Texture2D" uid="uid://b5vfvawo5qcry" path="res://Sprites/Vory/Walk/South-East_0006.png" id="14_n7ce6"]
+[ext_resource type="Texture2D" uid="uid://ctvruqul58e5i" path="res://Sprites/Vory/Walk/South-East_0007.png" id="15_ksgka"]
+[ext_resource type="Texture2D" uid="uid://dp5xlgbe42jdq" path="res://Sprites/Vory/Walk/South-East_0008.png" id="16_qxkiw"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ocyta"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_dyl28")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_q6sjb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_5xv3o")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_tuq88")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_ypsxg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_d0tn8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ruim3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_gbjpv")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_15kw8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_8qivu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_jfyw4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_jtd47")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_raxv8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_n7ce6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_ksgka")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_qxkiw")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 8.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_dyl28"]
+radius = 16.0
+height = 106.0
+
+[node name="Vory" type="CharacterBody2D" unique_id=1594986491]
+scale = Vector2(1.2, 1.2)
+collision_layer = 16
+script = ExtResource("1_vory")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=1442013352]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_ocyta")
+animation = &"walk"
+autoplay = "idle"
+frame_progress = 0.9349438
+
+[node name="Body" type="CollisionShape2D" parent="." unique_id=2108709175]
+position = Vector2(-7, 0)
+shape = SubResource("CapsuleShape2D_dyl28")
+
+[node name="GroundCheck" type="RayCast2D" parent="." unique_id=1880776485]
+position = Vector2(15, 51)
+target_position = Vector2(0, 18)
+
+[node name="WallCheck" type="RayCast2D" parent="." unique_id=548900254]
+position = Vector2(-7, 0)
+target_position = Vector2(22, 0)
+
+[node name="StateTimer" type="Timer" parent="." unique_id=426904688]
+one_shot = true

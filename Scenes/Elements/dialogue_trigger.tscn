@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://cdlgtrg0muses"]
+
+[ext_resource type="Script" path="res://Scripts/Elements/dialogue_trigger.gd" id="1_dtrg"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_zone"]
+size = Vector2(120, 120)
+
+[node name="DialogueTrigger" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_dtrg")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_zone")
+
+[node name="Prompt" type="Label" parent="."]
+z_index = 100
+offset_left = -12.0
+offset_top = -48.0
+offset_right = 12.0
+offset_bottom = -24.0
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 20
+text = "E"
+horizontal_alignment = 1
+vertical_alignment = 1
