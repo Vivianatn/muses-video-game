@@ -81,7 +81,7 @@ animations = [{
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ew5ud"]
 radius = 13.0
-height = 120.0
+height = 126.0
 
 [node name="Dory" type="CharacterBody2D" unique_id=1303750981]
 collision_layer = 16
@@ -95,9 +95,10 @@ sprite_frames = SubResource("SpriteFrames_ew5ud")
 animation = &"walk"
 autoplay = "idle"
 frame_progress = 0.50968885
+offset = Vector2(0, 2)
 
 [node name="Body" type="CollisionShape2D" parent="." unique_id=441097986]
-position = Vector2(-2, 0)
+position = Vector2(-4, -1)
 shape = SubResource("CapsuleShape2D_ew5ud")
 
 [node name="GroundCheck" type="RayCast2D" parent="." unique_id=27175803]

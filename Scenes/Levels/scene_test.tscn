@@ -33,6 +33,10 @@ prompt_margin = 10.0
 
 [node name="Léry" parent="PNJs" unique_id=1372044504 instance=ExtResource("6_nglel")]
 position = Vector2(988, 361)
+idle_sprite_offset = Vector2(0, 0)
+walk_sprite_offset = Vector2(0, 0)
+idle_sprite_scale = 1.0
+walk_sprite_scale = 1.0
 
 [node name="Dory" parent="PNJs" unique_id=1303750981 instance=ExtResource("7_28767")]
 position = Vector2(1245, 388)

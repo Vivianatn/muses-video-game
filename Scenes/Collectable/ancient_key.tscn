@@ -20,6 +20,7 @@ height = 46.0
 
 [node name="AncientKey" type="Area2D" unique_id=1180082677]
 texture_filter = 1
+rotation = 0.9161207
 scale = Vector2(0.5, 0.5)
 collision_layer = 0
 collision_mask = 2
