@@ -92,6 +92,12 @@ signal died
 @export var camera_pan_max_distance: Vector2 = Vector2(300, 200)
 ## Intensité max de l'assombrissement des bords pendant le dézoom (0 = désactivé).
 @export_range(0.0, 1.0) var focus_vignette_strength: float = 0.8
+## Zoom sur le joueur pendant un dialogue (1.25 = on se rapproche de 25 %,
+## 1 = pas de zoom).
+@export_range(1.0, 3.0, 0.01) var dialogue_zoom_factor: float = 1.25
+## Vitesse du zoom de dialogue, à l'aller comme au retour. Plus petit = plus
+## doux et plus lent.
+@export var dialogue_zoom_speed: float = 2.5
 
 @export_group("Vie")
 @export var max_health: int = 5
@@ -282,6 +288,7 @@ func _physics_process(delta: float) -> void:
 		_clamp_to_left_wall()
 		if on_floor:
 			_play(&"idle")
+		_update_camera_zoom(delta)
 		_was_on_floor = on_floor
 		return
 
@@ -792,14 +799,25 @@ func _clamp_to_left_wall() -> void:
 
 func _update_camera_zoom(delta: float) -> void:
 	# Appui long : on ne dézoome qu'après camera_hold_time de maintien.
-	if Input.is_action_pressed("camera_zoom_out"):
+	if Input.is_action_pressed("camera_zoom_out") and not _input_locked:
 		_zoom_hold_timer += delta
 	else:
 		_zoom_hold_timer = 0.0
 
 	_zoom_out_active = _zoom_hold_timer >= camera_hold_time
-	var target := _base_zoom / camera_zoom_out_factor if _zoom_out_active else _base_zoom
-	var z := lerpf(camera.zoom.x, target, camera_zoom_speed * delta)
+	var target := _base_zoom
+	var speed := camera_zoom_speed
+	if _input_locked and Dialogues.is_active():
+		# Dialogue : on se rapproche doucement du joueur.
+		target = _base_zoom * dialogue_zoom_factor
+		speed = dialogue_zoom_speed
+	elif _zoom_out_active:
+		target = _base_zoom / camera_zoom_out_factor
+	elif camera.zoom.x > _base_zoom:
+		# Fin de dialogue : on revient au zoom normal aussi doucement qu'on
+		# s'est rapproché.
+		speed = dialogue_zoom_speed
+	var z := lerpf(camera.zoom.x, target, 1.0 - exp(-speed * delta))
 	camera.zoom = Vector2(z, z)
 
 	_update_camera_pan(delta)

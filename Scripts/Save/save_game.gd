@@ -280,10 +280,10 @@ func delete_slot(slot: int) -> void:
 
 ## « 1 h 05 min » ou « 12 min », pour afficher un temps de jeu.
 static func format_playtime(seconds: float) -> String:
-	var minutes := int(seconds) / 60
+	var minutes := floori(seconds / 60.0)
 	if minutes < 60:
 		return "%d min" % minutes
-	return "%d h %02d min" % [minutes / 60, minutes % 60]
+	return "%d h %02d min" % [floori(minutes / 60.0), minutes % 60]
 
 
 ## « 25/09/2026 14:03 », pour afficher la date d'une sauvegarde.

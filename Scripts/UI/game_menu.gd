@@ -18,6 +18,10 @@ extends CanvasLayer
 signal opened
 signal closed
 
+## Le script de SaveGame, pour appeler ses fonctions statiques sans passer
+## par l'instance de l'autoload.
+const SaveGameScript := preload("res://Scripts/Save/save_game.gd")
+
 @export_group("Apparence")
 @export var accent_color: Color = Color(1, 0.86, 0.55)
 @export var text_color: Color = Color(0.93, 0.91, 0.87)
@@ -358,8 +362,8 @@ func _make_save_slot(slot: int, info: Dictionary) -> Button:
 		lines.add_child(_label("Fichier abîmé, illisible", small_size, Color(1, 0.5, 0.45)))
 	else:
 		usable = true
-		lines.add_child(_label("%s · %s" % [info.location, SaveGame.format_playtime(info.playtime)], small_size, text_color))
-		var date := SaveGame.format_date(info.saved_at)
+		lines.add_child(_label("%s · %s" % [info.location, SaveGameScript.format_playtime(info.playtime)], small_size, text_color))
+		var date := SaveGameScript.format_date(info.saved_at)
 		if info.from_backup:
 			date += "  (copie de secours)"
 		lines.add_child(_label(date, small_size, dim_text_color))

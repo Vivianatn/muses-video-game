@@ -54,5 +54,5 @@ func _on_health_changed(current: int, maximum: int) -> void:
 	var fill := get_theme_stylebox("fill") as StyleBoxFlat
 	if fill == null:
 		return
-	var ratio := float(current) / max_value
-	fill.bg_color = low_health_color if ratio <= low_health_threshold else _normal_color
+	var health_ratio := float(current) / max_value
+	fill.bg_color = low_health_color if health_ratio <= low_health_threshold else _normal_color
