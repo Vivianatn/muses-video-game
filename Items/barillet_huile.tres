@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponPartData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/weapon_part_data.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+slot = 1
+damage_bonus = 0
+fire_rate_bonus = 0.25
+bullet_speed_bonus = 0.0
+range_bonus = 0.0
+id = &"barillet_huile"
+display_name = "Barillet huilé"
+description = "Un barillet si bien graissé qu'il tourne sans un bruit. On recharge plus vite entre deux tirs."
+max_count = 1
+sort_order = 110

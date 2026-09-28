@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponPartData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/weapon_part_data.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+slot = 2
+damage_bonus = 1
+fire_rate_bonus = 0.0
+bullet_speed_bonus = 0.0
+range_bonus = 0.0
+id = &"crosse_gravee"
+display_name = "Crosse gravée"
+description = "Une crosse couverte de runes anciennes. Chaque balle semble frapper plus fort."
+max_count = 1
+sort_order = 120

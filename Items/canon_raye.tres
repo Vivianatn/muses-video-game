@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponPartData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Items/weapon_part_data.gd" id="1_part"]
+
+[resource]
+script = ExtResource("1_part")
+slot = 0
+damage_bonus = 0
+fire_rate_bonus = 0.0
+bullet_speed_bonus = 0.3
+range_bonus = 0.4
+id = &"canon_raye"
+display_name = "Canon rayé"
+description = "Un canon aux rainures fines qui font tourner la balle sur elle-même. Elle file plus vite et plus loin."
+max_count = 1
+sort_order = 100

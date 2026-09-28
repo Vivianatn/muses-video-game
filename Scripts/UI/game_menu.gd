@@ -1,12 +1,15 @@
 extends CanvasLayer
 
 ## Le menu du jeu, chargé en autoload sous le nom "GameMenu" : pause,
-## inventaire, sauvegarde et chargement.
+## fenêtre Personnage (inventaire, équipement, compétences), sauvegarde et
+## chargement.
 ##
 ## Touches (Projet → Paramètres du projet → Contrôles) :
-##   menu       Échap / Start          ouvre ou ferme le menu
-##   inventory  I / Select             ouvre directement l'inventaire
-##   menu_back  Retour arrière / B     revient à la fenêtre précédente
+##   menu               Échap / Start          ouvre ou ferme le menu
+##   inventory          I / Select             ouvre directement l'inventaire
+##   menu_back          Retour arrière / B     revient à la fenêtre précédente
+##   menu_tab_prev/next A E (AZERTY) / LB RB   onglet précédent / suivant
+##   menu_filter_*      W C (AZERTY) / LT RT   filtre de l'inventaire
 ##
 ## Les fenêtres s'empilent : chaque « retour » ferme celle du dessus et rend
 ## la sélection là où on l'avait laissée. Retour sur la dernière = le menu se
@@ -33,6 +36,9 @@ const SaveGameScript := preload("res://Scripts/Save/save_game.gd")
 @export_range(8, 72, 1) var title_size: int = 34
 @export_range(8, 72, 1) var text_size: int = 22
 @export_range(8, 72, 1) var small_size: int = 16
+## Taille (px) de toutes les fenêtres du menu. Elle est la même pour toutes
+## et ne bouge jamais : ce qui dépasse défile à l'intérieur.
+@export var window_size: Vector2 = Vector2(900, 560)
 
 @export_group("Inventaire")
 ## Nombre de cases par ligne.
@@ -50,16 +56,50 @@ var _focus_memory: Dictionary[Control, Control] = {}
 
 var _root: Control
 var _main: Control
-var _inventory: Control
+var _character: Control
 var _slots: Control
 var _confirm: Control
 var _hints: Dictionary[Control, Label] = {}
+
+## Les onglets de la fenêtre Personnage, dans l'ordre de TAB_NAMES.
+enum Tab { ITEMS, EQUIPMENT, SKILLS }
+const TAB_NAMES: PackedStringArray = ["Inventaire", "Équipement", "Compétences"]
+var _tab: int = Tab.ITEMS
+var _tab_buttons: Array[Button] = []
+var _pages: Array[Control] = []
+var _tab_prev_key: Label
+var _tab_next_key: Label
+
+## Filtre de l'onglet Inventaire : -1 = tout, sinon une ItemData.Category.
+var _filter: int = -1
+var _filter_buttons: Array[Button] = []
+var _filter_prev_key: Label
+var _filter_next_key: Label
 
 var _inv_grid: GridContainer
 var _inv_icon: TextureRect
 var _inv_name: Label
 var _inv_count: Label
 var _inv_desc: Label
+
+var _eq_slot: int = 0
+var _eq_part: WeaponPartData
+var _eq_slot_buttons: Dictionary[int, Button] = {}
+var _eq_totals: Label
+var _eq_parts_title: Label
+var _eq_parts: VBoxContainer
+var _eq_name: Label
+var _eq_desc: Label
+var _eq_stats: Label
+var _eq_action: Label
+
+var _sk_current: SkillData
+var _sk_list: VBoxContainer
+var _sk_count: Label
+var _sk_icon: TextureRect
+var _sk_name: Label
+var _sk_input: Label
+var _sk_desc: Label
 
 var _slots_title: Label
 var _slots_list: VBoxContainer
@@ -83,6 +123,8 @@ func _ready() -> void:
 	SaveGame.saved.connect(_on_saved)
 	SaveGame.failed.connect(_on_save_failed)
 	Inventory.changed.connect(_on_inventory_changed)
+	# InputDevice est chargé après GameMenu : on attend qu'il soit là.
+	_connect_input_device.call_deferred()
 
 
 func _input(event: InputEvent) -> void:
@@ -98,12 +140,30 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"menu"):
 		get_viewport().set_input_as_handled()
 		close()
-	elif event.is_action_pressed(&"inventory") and _top() == _inventory:
+	elif event.is_action_pressed(&"inventory") and _top() == _character:
 		get_viewport().set_input_as_handled()
 		close()
 	elif event.is_action_pressed(&"menu_back") or event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
 		back()
+
+
+# Onglets et filtres ici plutôt que dans _input : les gâchettes (LT/RT) sont
+# des axes qui envoient un flot d'événements, just_pressed n'en garde qu'un.
+func _process(_delta: float) -> void:
+	if not _open or _top() != _character:
+		return
+	if Input.is_action_just_pressed(&"menu_tab_prev"):
+		_select_tab(wrapi(_tab - 1, 0, TAB_NAMES.size()))
+	elif Input.is_action_just_pressed(&"menu_tab_next"):
+		_select_tab(wrapi(_tab + 1, 0, TAB_NAMES.size()))
+	elif _tab == Tab.ITEMS:
+		# Les filtres vont de -1 (tout) à la dernière catégorie, en boucle.
+		var count := ItemData.CATEGORY_NAMES.size() + 1
+		if Input.is_action_just_pressed(&"menu_filter_prev"):
+			_set_filter(wrapi(_filter, 0, count) - 1)
+		elif Input.is_action_just_pressed(&"menu_filter_next"):
+			_set_filter(wrapi(_filter + 2, 0, count) - 1)
 
 
 # --- Ouvrir, fermer, naviguer ---------------------------------------------
@@ -125,9 +185,13 @@ func open(start: StringName = &"") -> void:
 	_root.visible = true
 	_stack.clear()
 	_focus_memory.clear()
-	for window in [_main, _inventory, _slots, _confirm]:
+	for window in [_main, _character, _slots, _confirm]:
 		window.visible = false
-	_push(_inventory if start == &"inventory" else _main)
+	if start == &"inventory":
+		_tab = Tab.ITEMS
+		_push(_character)
+	else:
+		_push(_main)
 	opened.emit()
 
 
@@ -187,14 +251,15 @@ func _top() -> Control:
 
 
 func _can_open() -> bool:
-	if get_tree().paused or get_tree().current_scene == null:
+	var scene := get_tree().current_scene
+	if get_tree().paused or scene == null or scene.is_in_group(&"title_screen"):
 		return false
 	return not Dialogues.is_active() and not SaveGame.is_busy()
 
 
 func _refresh(window: Control) -> void:
-	if window == _inventory:
-		_refresh_inventory()
+	if window == _character:
+		_refresh_character()
 	elif window == _slots:
 		_refresh_slots()
 
@@ -211,6 +276,10 @@ func _focus_default(window: Control) -> void:
 
 func _first_focusable(node: Node) -> Control:
 	for child in node.get_children():
+		# Onglet caché : ses boutons ne comptent pas.
+		var control := child as Control
+		if control != null and not control.visible:
+			continue
 		var button := child as BaseButton
 		if button != null and not button.disabled and button.focus_mode != Control.FOCUS_NONE:
 			return button
@@ -245,13 +314,63 @@ func _on_quit() -> void:
 	_ask("Quitter le jeu ?\nLa progression non sauvegardée sera perdue.", get_tree().quit)
 
 
-# --- Inventaire -----------------------------------------------------------
+# --- Personnage ----------------------------------------------------------
 
-func _refresh_inventory() -> void:
+func _select_tab(tab: int) -> void:
+	_tab = tab
+	_refresh_character()
+	_update_hint(_character)
+	_focus_default(_character)
+
+
+func _refresh_character() -> void:
+	for i in _pages.size():
+		_pages[i].visible = i == _tab
+		_tab_buttons[i].set_pressed_no_signal(i == _tab)
+	match _tab:
+		Tab.ITEMS:
+			_refresh_items()
+		Tab.EQUIPMENT:
+			_refresh_equipment()
+		Tab.SKILLS:
+			_refresh_skills()
+
+
+func _on_inventory_changed(_id: StringName, _count: int) -> void:
+	if _open and _top() == _character:
+		_refresh_character()
+
+
+# --- Onglet Inventaire ----------------------------------------------------
+
+func _set_filter(filter: int) -> void:
+	_filter = filter
+	_refresh_items()
+	_update_hint(_character)
+	_focus_default(_pages[Tab.ITEMS])
+
+
+## Les objets de l'onglet : tout sauf les pièces du revolver (elles ont leur
+## onglet), et seulement ceux du filtre choisi.
+func _shown_items() -> Array[ItemData]:
+	var shown: Array[ItemData] = []
+	for item in Inventory.get_owned_items():
+		if item is WeaponPartData:
+			continue
+		if _filter >= 0 and item.category != _filter:
+			continue
+		shown.append(item)
+	return shown
+
+
+func _refresh_items() -> void:
+	for i in _filter_buttons.size():
+		_filter_buttons[i].set_pressed_no_signal(i == _filter + 1)
+
 	_clear(_inv_grid)
 	_inv_grid.columns = inventory_columns
 
-	var items := Inventory.get_owned_items()
+	var items := _shown_items()
 	var total := maxi(inventory_min_slots, items.size())
 	# Des lignes complètes : la navigation à la croix reste régulière.
 	total = ceili(float(total) / inventory_columns) * inventory_columns
@@ -292,19 +411,137 @@ func _make_item_slot(item: ItemData) -> Button:
 func _show_item(item: ItemData) -> void:
 	if item == null:
 		_inv_icon.texture = null
-		_inv_name.text = "Ton sac est vide." if Inventory.get_owned_items().is_empty() else "—"
+		if not _shown_items().is_empty():
+			_inv_name.text = "—"
+		elif _filter < 0:
+			_inv_name.text = "Ton sac est vide."
+		else:
+			_inv_name.text = "Rien dans cette catégorie."
 		_inv_count.text = ""
 		_inv_desc.text = ""
 		return
 	_inv_icon.texture = item.icon
 	_inv_name.text = item.display_name
-	_inv_count.text = "Possédé : %d" % Inventory.count(item.id)
+	_inv_count.text = "%s · Possédé : %d" % [ItemData.CATEGORY_NAMES[item.category], Inventory.count(item.id)]
 	_inv_desc.text = item.description
 
 
-func _on_inventory_changed(_id: StringName, _count: int) -> void:
-	if _open and _top() == _inventory:
-		_refresh_inventory()
+# --- Onglet Équipement ----------------------------------------------------
+
+func _refresh_equipment() -> void:
+	for slot in _eq_slot_buttons:
+		var part := Equipment.get_part(slot)
+		_eq_slot_buttons[slot].text = "%s : %s" % [WeaponPartData.SLOT_NAMES[slot], part.display_name if part != null else "—"]
+	var stats := Equipment.stats_text()
+	if stats == "":
+		_eq_totals.text = "Aucune pièce montée : le revolver est d'origine."
+	else:
+		_eq_totals.text = "Bonus du revolver :\n" + stats.replace(" · ", "\n")
+	_show_slot(_eq_slot)
+
+
+## Liste à droite les pièces possédées pour cet emplacement.
+func _show_slot(slot: int) -> void:
+	_eq_slot = slot
+	_eq_parts_title.text = "Emplacement : %s" % WeaponPartData.SLOT_NAMES[slot]
+	_clear(_eq_parts)
+
+	var parts := Equipment.get_owned_parts(slot)
+	if parts.is_empty():
+		_eq_parts.add_child(_label("Aucune pièce de ce type pour l'instant.", small_size, dim_text_color))
+	for part in parts:
+		var button := Button.new()
+		button.text = part.display_name
+		if Equipment.is_equipped(part.id):
+			button.text += "  · montée"
+		button.icon = part.icon
+		button.add_theme_constant_override(&"icon_max_width", 32)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.focus_entered.connect(_show_part.bind(part))
+		button.mouse_entered.connect(button.grab_focus)
+		button.pressed.connect(_on_part_pressed.bind(part))
+		_eq_parts.add_child(button)
+		# Vers la gauche, on revient toujours sur l'emplacement qu'on regardait.
+		button.focus_neighbor_left = button.get_path_to(_eq_slot_buttons[slot])
+
+	_show_part(Equipment.get_part(slot))
+
+
+func _show_part(part: WeaponPartData) -> void:
+	_eq_part = part
+	if part == null:
+		_eq_name.text = "Rien de monté"
+		if Equipment.get_owned_parts(_eq_slot).is_empty():
+			_eq_desc.text = "Trouve des pièces pour améliorer le revolver."
+		else:
+			_eq_desc.text = "Choisis une pièce dans la liste pour la monter."
+		_eq_stats.text = ""
+		_eq_action.text = ""
+		return
+	_eq_name.text = part.display_name
+	_eq_desc.text = part.description
+	_eq_stats.text = part.stats_text()
+	var mounted := Equipment.is_equipped(part.id)
+	_eq_action.text = "%s : %s" % [_key(&"ui_accept"), "retirer" if mounted else "monter"]
+
+
+## Valider sur un emplacement : on passe à la liste de ses pièces.
+func _focus_parts() -> void:
+	var first := _first_focusable(_eq_parts)
+	if first != null:
+		first.grab_focus()
+
+
+func _on_part_pressed(part: WeaponPartData) -> void:
+	var index := _focused_index(_eq_parts)
+	if Equipment.is_equipped(part.id):
+		Equipment.unequip(part.slot)
+	else:
+		Equipment.equip(part.id)
+	_refresh_equipment()
+	# La liste vient d'être reconstruite : on remet la sélection au même rang.
+	if index >= 0 and index < _eq_parts.get_child_count():
+		(_eq_parts.get_child(index) as Control).grab_focus()
+
+
+# --- Onglet Compétences ---------------------------------------------------
+
+func _refresh_skills() -> void:
+	_clear(_sk_list)
+	var owned := Skills.get_owned_skills()
+	_sk_count.text = "%d / %d compétences" % [owned.size(), Skills.total_count()]
+	for skill in owned:
+		var button := Button.new()
+		button.text = skill.display_name
+		button.icon = skill.icon
+		button.add_theme_constant_override(&"icon_max_width", 32)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.focus_entered.connect(_show_skill.bind(skill))
+		button.mouse_entered.connect(button.grab_focus)
+		_sk_list.add_child(button)
+	_show_skill(owned[0] if not owned.is_empty() else null)
+
+
+func _show_skill(skill: SkillData) -> void:
+	_sk_current = skill
+	if skill == null:
+		_sk_icon.texture = null
+		_sk_name.text = "Aucune compétence"
+		_sk_input.text = ""
+		_sk_desc.text = ""
+		return
+	_sk_icon.texture = skill.icon
+	_sk_icon.visible = skill.icon != null
+	_sk_name.text = skill.display_name
+	var keys: PackedStringArray = []
+	for action in skill.actions:
+		var key := _key(action)
+		if key != "" and not keys.has(key):
+			keys.append(key)
+	_sk_input.text = "Commande : " + " / ".join(keys) if not keys.is_empty() else ""
+	_sk_desc.text = skill.description
 
 
 # --- Sauvegarder / charger ------------------------------------------------
@@ -329,7 +566,7 @@ func _refresh_slots() -> void:
 
 func _make_save_slot(slot: int, info: Dictionary) -> Button:
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(560, 92)
+	button.custom_minimum_size = Vector2(0, 92)
 	button.focus_mode = Control.FOCUS_ALL
 	button.mouse_entered.connect(button.grab_focus)
 
@@ -349,6 +586,7 @@ func _make_save_slot(slot: int, info: Dictionary) -> Button:
 
 	var lines := VBoxContainer.new()
 	lines.alignment = BoxContainer.ALIGNMENT_CENTER
+	lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(lines)
 
@@ -362,7 +600,10 @@ func _make_save_slot(slot: int, info: Dictionary) -> Button:
 		lines.add_child(_label("Fichier abîmé, illisible", small_size, Color(1, 0.5, 0.45)))
 	else:
 		usable = true
-		lines.add_child(_label("%s · %s" % [info.location, SaveGameScript.format_playtime(info.playtime)], small_size, text_color))
+		var place := _label("%s · %s" % [info.location, SaveGameScript.format_playtime(info.playtime)], small_size, text_color)
+		# Un nom de lieu trop long est coupé plutôt que d'élargir la fenêtre.
+		place.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		lines.add_child(place)
 		var date := SaveGameScript.format_date(info.saved_at)
 		if info.from_backup:
 			date += "  (copie de secours)"
@@ -427,15 +668,46 @@ func _update_hint(window: Control) -> void:
 	var hint: Label = _hints.get(window)
 	if hint == null:
 		return
-	if _gamepad():
-		hint.text = "A : valider     B : retour     Start : fermer"
-	else:
-		hint.text = "Entrée : valider     Retour arrière : retour     Échap : fermer"
+	var parts: PackedStringArray = []
+	if window == _character:
+		parts.append("%s %s : onglet" % [_key(&"menu_tab_prev"), _key(&"menu_tab_next")])
+		if _tab == Tab.ITEMS:
+			parts.append("%s %s : filtre" % [_key(&"menu_filter_prev"), _key(&"menu_filter_next")])
+	parts.append("%s : valider" % _key(&"ui_accept"))
+	parts.append("%s : retour" % _key(&"menu_back"))
+	parts.append("%s : fermer" % _key(&"menu"))
+	hint.text = "     ".join(parts)
+
+	if window == _character:
+		_tab_prev_key.text = "‹ " + _key(&"menu_tab_prev")
+		_tab_next_key.text = _key(&"menu_tab_next") + " ›"
+		_filter_prev_key.text = "‹ " + _key(&"menu_filter_prev")
+		_filter_next_key.text = _key(&"menu_filter_next") + " ›"
 
 
-func _gamepad() -> bool:
+## Rappel des touches : on bascule clavier ↔ manette dès qu'une manette est
+## branchée ou débranchée, même menu ouvert.
+func _connect_input_device() -> void:
 	var device := get_node_or_null(^"/root/InputDevice")
-	return device != null and bool(device.call(&"is_gamepad"))
+	if device != null:
+		device.connect(&"changed", _on_input_device_changed)
+
+
+func _on_input_device_changed(_gamepad_connected: bool) -> void:
+	for window in _hints:
+		_update_hint(window)
+	# Les touches affichées dans les détails changent aussi.
+	if _open and _top() == _character:
+		if _tab == Tab.EQUIPMENT:
+			_show_part(_eq_part)
+		elif _tab == Tab.SKILLS:
+			_show_skill(_sk_current)
+
+
+## Nom de la touche d'une action, clavier ou manette selon ce qui est branché.
+func _key(action: StringName) -> String:
+	var device := get_node_or_null(^"/root/InputDevice")
+	return String(device.call(&"action_label", action)) if device != null else ""
 
 
 func _focused_index(container: Node) -> int:
@@ -449,6 +721,16 @@ static func _clear(container: Node) -> void:
 	for child in container.get_children():
 		container.remove_child(child)
 		child.queue_free()
+
+
+## Texte sur plusieurs lignes, coupé au-delà de `max_lines` pour ne jamais
+## agrandir la fenêtre.
+func _wrapped_label(size: int, color: Color, max_lines: int) -> Label:
+	var label := _label("", size, color)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.max_lines_visible = max_lines
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	return label
 
 
 func _label(text: String, size: int, color: Color) -> Label:
@@ -474,7 +756,7 @@ func _build() -> void:
 	_root.add_child(backdrop)
 
 	_main = _build_main()
-	_inventory = _build_inventory()
+	_character = _build_character()
 	_slots = _build_slots()
 	_confirm = _build_confirm()
 
@@ -498,7 +780,9 @@ func _make_window(title: String) -> Array:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(center)
 
+	# Taille fixe : la fenêtre ne change pas de taille d'un écran à l'autre.
 	var panel := PanelContainer.new()
+	panel.custom_minimum_size = window_size
 	center.add_child(panel)
 
 	var column := VBoxContainer.new()
@@ -511,22 +795,35 @@ func _make_window(title: String) -> Array:
 
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override(&"separation", 10)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(body)
 
 	var hint := _label("", small_size, dim_text_color)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Un rappel trop long est coupé plutôt que d'élargir la fenêtre.
+	hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	column.add_child(hint)
 	_hints[center] = hint
 
 	return [center, body, title_label]
 
 
+## Zone qui défile verticalement et suit la sélection (manette comprise).
+func _make_scroll() -> ScrollContainer:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	return scroll
+
+
 func _build_main() -> Control:
 	var parts := _make_window("Pause")
 	var body: VBoxContainer = parts[1]
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
 	for entry in [
 		["Reprendre", _on_resume],
-		["Inventaire", func() -> void: _push(_inventory)],
+		["Personnage", func() -> void: _push(_character)],
 		["Sauvegarder", _open_slots.bind(true)],
 		["Charger", _open_slots.bind(false)],
 		["Quitter le jeu", _on_quit],
@@ -534,25 +831,90 @@ func _build_main() -> Control:
 		var button := Button.new()
 		button.text = entry[0]
 		button.custom_minimum_size = Vector2(320, 0)
+		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.pressed.connect(entry[1])
 		button.mouse_entered.connect(button.grab_focus)
 		body.add_child(button)
 	return parts[0]
 
 
-func _build_inventory() -> Control:
-	var parts := _make_window("Inventaire")
+func _build_character() -> Control:
+	var parts := _make_window("Personnage")
 	var body: VBoxContainer = parts[1]
+	# Les onglets font office de titre.
+	(parts[2] as Label).visible = false
+
+	var bar := HBoxContainer.new()
+	bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	bar.add_theme_constant_override(&"separation", 12)
+	body.add_child(bar)
+	_tab_prev_key = _label("", small_size, dim_text_color)
+	bar.add_child(_tab_prev_key)
+	for i in TAB_NAMES.size():
+		var tab := Button.new()
+		tab.text = TAB_NAMES[i]
+		tab.toggle_mode = true
+		# Pas de sélection à la croix : on change d'onglet avec menu_tab_*,
+		# la croix reste au contenu de l'onglet.
+		tab.focus_mode = Control.FOCUS_NONE
+		tab.custom_minimum_size = Vector2(200, 0)
+		tab.pressed.connect(_select_tab.bind(i))
+		bar.add_child(tab)
+		_tab_buttons.append(tab)
+	_tab_next_key = _label("", small_size, dim_text_color)
+	bar.add_child(_tab_next_key)
+
+	_pages.append(_build_items_page())
+	_pages.append(_build_equipment_page())
+	_pages.append(_build_skills_page())
+	for page in _pages:
+		page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		body.add_child(page)
+	return parts[0]
+
+
+func _build_items_page() -> Control:
+	var page := VBoxContainer.new()
+	page.add_theme_constant_override(&"separation", 12)
+
+	var filters := HBoxContainer.new()
+	filters.alignment = BoxContainer.ALIGNMENT_CENTER
+	filters.add_theme_constant_override(&"separation", 6)
+	page.add_child(filters)
+	_filter_prev_key = _label("", small_size, dim_text_color)
+	filters.add_child(_filter_prev_key)
+	var names: PackedStringArray = ["Tout"]
+	names.append_array(ItemData.CATEGORY_NAMES)
+	for i in names.size():
+		var filter := Button.new()
+		filter.text = names[i]
+		filter.toggle_mode = true
+		filter.focus_mode = Control.FOCUS_NONE
+		filter.add_theme_font_size_override(&"font_size", small_size)
+		filter.pressed.connect(_set_filter.bind(i - 1))
+		filters.add_child(filter)
+		_filter_buttons.append(filter)
+	_filter_next_key = _label("", small_size, dim_text_color)
+	filters.add_child(_filter_next_key)
 
 	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override(&"separation", 24)
-	body.add_child(row)
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	page.add_child(row)
+
+	# Beaucoup d'objets : la grille défile, la fenêtre ne grandit pas.
+	var scroll := _make_scroll()
+	scroll.custom_minimum_size.x = inventory_columns * inventory_slot_size + (inventory_columns - 1) * 6 + 12
+	row.add_child(scroll)
 
 	_inv_grid = GridContainer.new()
 	_inv_grid.columns = inventory_columns
 	_inv_grid.add_theme_constant_override(&"h_separation", 6)
 	_inv_grid.add_theme_constant_override(&"v_separation", 6)
-	row.add_child(_inv_grid)
+	# Icônes en pixel art : pas de flou à l'agrandissement.
+	_inv_grid.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scroll.add_child(_inv_grid)
 
 	var detail := VBoxContainer.new()
 	detail.custom_minimum_size = Vector2(280, 0)
@@ -570,28 +932,110 @@ func _build_inventory() -> Control:
 	detail.add_child(_inv_name)
 	_inv_count = _label("", small_size, dim_text_color)
 	detail.add_child(_inv_count)
-	_inv_desc = _label("", small_size, text_color)
-	_inv_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_inv_desc = _wrapped_label(small_size, text_color, 8)
 	_inv_desc.custom_minimum_size = Vector2(280, 0)
 	detail.add_child(_inv_desc)
+	return page
 
-	# Icônes en pixel art : pas de flou à l'agrandissement.
-	_inv_grid.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	return parts[0]
+
+func _build_equipment_page() -> Control:
+	var page := HBoxContainer.new()
+	page.add_theme_constant_override(&"separation", 32)
+
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(320, 0)
+	left.add_theme_constant_override(&"separation", 8)
+	page.add_child(left)
+	left.add_child(_label("Revolver", text_size, accent_color))
+	for slot in WeaponPartData.Slot.values():
+		var button := Button.new()
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		button.focus_entered.connect(_show_slot.bind(slot))
+		button.mouse_entered.connect(button.grab_focus)
+		button.pressed.connect(_focus_parts)
+		left.add_child(button)
+		_eq_slot_buttons[slot] = button
+	_eq_totals = _wrapped_label(small_size, text_color, 5)
+	left.add_child(_eq_totals)
+
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override(&"separation", 8)
+	page.add_child(right)
+	_eq_parts_title = _label("", text_size, accent_color)
+	right.add_child(_eq_parts_title)
+	var scroll := _make_scroll()
+	right.add_child(scroll)
+	_eq_parts = VBoxContainer.new()
+	_eq_parts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_eq_parts.add_theme_constant_override(&"separation", 6)
+	scroll.add_child(_eq_parts)
+
+	_eq_name = _label("", text_size, accent_color)
+	right.add_child(_eq_name)
+	_eq_desc = _wrapped_label(small_size, text_color, 3)
+	right.add_child(_eq_desc)
+	_eq_stats = _label("", small_size, accent_color)
+	_eq_stats.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	right.add_child(_eq_stats)
+	_eq_action = _label("", small_size, dim_text_color)
+	right.add_child(_eq_action)
+	return page
+
+
+func _build_skills_page() -> Control:
+	var page := HBoxContainer.new()
+	page.add_theme_constant_override(&"separation", 32)
+
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(320, 0)
+	left.add_theme_constant_override(&"separation", 8)
+	page.add_child(left)
+	_sk_count = _label("", small_size, dim_text_color)
+	left.add_child(_sk_count)
+	var scroll := _make_scroll()
+	left.add_child(scroll)
+	_sk_list = VBoxContainer.new()
+	_sk_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sk_list.add_theme_constant_override(&"separation", 6)
+	scroll.add_child(_sk_list)
+
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override(&"separation", 8)
+	page.add_child(right)
+	_sk_icon = TextureRect.new()
+	_sk_icon.custom_minimum_size = Vector2(96, 96)
+	_sk_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_sk_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_sk_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	right.add_child(_sk_icon)
+	_sk_name = _label("", title_size, accent_color)
+	right.add_child(_sk_name)
+	_sk_input = _label("", text_size, text_color)
+	right.add_child(_sk_input)
+	_sk_desc = _wrapped_label(small_size, text_color, 8)
+	right.add_child(_sk_desc)
+	return page
 
 
 func _build_slots() -> Control:
 	var parts := _make_window("Sauvegarder")
 	_slots_title = parts[2]
+	var scroll := _make_scroll()
+	(parts[1] as VBoxContainer).add_child(scroll)
 	_slots_list = VBoxContainer.new()
 	_slots_list.add_theme_constant_override(&"separation", 8)
-	(parts[1] as VBoxContainer).add_child(_slots_list)
+	_slots_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_slots_list)
 	return parts[0]
 
 
 func _build_confirm() -> Control:
 	var parts := _make_window("Confirmation")
 	var body: VBoxContainer = parts[1]
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	_confirm_label = _label("", text_size, text_color)
 	_confirm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -625,6 +1069,8 @@ func _make_theme() -> Theme:
 	theme.set_stylebox(&"normal", &"Button", _box(button_color, Color.TRANSPARENT, 0, 8, 10))
 	theme.set_stylebox(&"hover", &"Button", _box(button_color.lightened(0.1), Color.TRANSPARENT, 0, 8, 10))
 	theme.set_stylebox(&"pressed", &"Button", _box(accent_color.darkened(0.6), Color.TRANSPARENT, 0, 8, 10))
+	# Onglet ou filtre choisi, sous la souris.
+	theme.set_stylebox(&"hover_pressed", &"Button", _box(accent_color.darkened(0.5), Color.TRANSPARENT, 0, 8, 10))
 	theme.set_stylebox(&"disabled", &"Button", _box(Color(1, 1, 1, 0.02), Color.TRANSPARENT, 0, 8, 10))
 	# Dessinée par-dessus les autres : le cadre doré montre la sélection,
 	# indispensable à la manette.
@@ -635,6 +1081,7 @@ func _make_theme() -> Theme:
 	theme.set_color(&"font_hover_color", &"Button", accent_color)
 	theme.set_color(&"font_focus_color", &"Button", accent_color)
 	theme.set_color(&"font_pressed_color", &"Button", accent_color)
+	theme.set_color(&"font_hover_pressed_color", &"Button", accent_color)
 	theme.set_color(&"font_disabled_color", &"Button", dim_text_color.darkened(0.3))
 	theme.set_font_size(&"font_size", &"Label", text_size)
 	theme.set_color(&"font_color", &"Label", text_color)

@@ -9,4 +9,5 @@ id = &"connaissance"
 display_name = "Connaissance"
 description = "Un fragment de savoir de l'antique civilisation, figé dans un cristal. Il brille encore faiblement."
 icon = ExtResource("2_icon")
+category = 1
 dialogue_var = &"connaissances"

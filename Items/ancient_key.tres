@@ -9,6 +9,7 @@ id = &"ancient_key"
 display_name = "Clé ancienne"
 description = "Une clé très ancienne et servant probablement à ouvrir une porte mystérieuse et importante, mais laquelle ?"
 icon = ExtResource("2_icon")
+category = 0
 max_count = 1
 sort_order = 10
 dialogue_var = &"cle_ancienne"

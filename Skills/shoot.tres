@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"shoot"
+display_name = "Tir au revolver"
+description = "Tirer droit devant. Le personnage se plante le temps du coup de feu. Les pièces montées dans l'onglet Équipement améliorent le revolver."
+actions = Array[StringName]([&"fire"])
+sort_order = 50

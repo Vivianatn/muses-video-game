@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"jump"
+display_name = "Saut"
+description = "Bondir par-dessus les obstacles. Maintenir la touche pour sauter plus haut, la relâcher tôt pour un petit saut."
+actions = Array[StringName]([&"jump"])
+sort_order = 0

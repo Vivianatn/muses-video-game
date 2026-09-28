@@ -39,7 +39,7 @@ const MAGIC := "MUSE"
 const FORMAT_VERSION := 1
 
 ## Nombre d'emplacements de sauvegarde manuelle.
-@export var slot_count: int = 3
+@export var slot_count: int = 8
 ## Sauvegarde automatique toutes les X secondes de jeu (hors pause et hors
 ## dialogue). 0 = jamais.
 @export var autosave_interval: float = 300.0
@@ -65,7 +65,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if get_tree().paused:
+	# Rien à compter ni à sauvegarder sur l'écran titre.
+	var scene := get_tree().current_scene
+	if get_tree().paused or scene == null or scene.is_in_group(&"title_screen"):
 		return
 	playtime += delta
 
@@ -135,6 +137,8 @@ func save_slot(slot: int) -> bool:
 		"scene": level.scene_file_path,
 		"player": _player_state(),
 		"inventory": Inventory.save_state(),
+		"equipment": Equipment.save_state(),
+		"skills": Skills.save_state(),
 		"dialogue_vars": _dialogue_vars(),
 		"world": _world.duplicate(true),
 	}
@@ -166,6 +170,18 @@ func clear_thumbnail() -> void:
 
 
 # --- Charger --------------------------------------------------------------
+
+## Remet tout à zéro pour une nouvelle partie. Le niveau, lui, est à lancer
+## ensuite.
+func new_game() -> void:
+	playtime = 0.0
+	_autosave_timer = 0.0
+	_world.clear()
+	Inventory.load_state({})
+	Equipment.clear()
+	Skills.reset()
+	Dialogues.clear_vars()
+
 
 ## Charge l'emplacement : change de niveau si besoin, puis remet chaque chose
 ## en place. À attendre avec await si l'on a besoin de savoir quand c'est fini.
@@ -199,6 +215,9 @@ func load_slot(slot: int) -> bool:
 	for var_name in vars:
 		Dialogues.set_var(StringName(var_name), vars[var_name])
 	Inventory.load_state(data.get("inventory", {}))
+	# Après l'inventaire : on ne remonte que les pièces possédées.
+	Equipment.load_state(data.get("equipment", {}))
+	Skills.load_state(data.get("skills", []))
 
 	get_tree().paused = false
 	var previous := get_tree().current_scene

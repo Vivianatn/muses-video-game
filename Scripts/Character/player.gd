@@ -410,7 +410,7 @@ func _handle_jump() -> void:
 		velocity.y = jump_velocity
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
-	elif _jumps_left > 0:
+	elif _jumps_left > 0 and Skills.has(&"double_jump"):
 		# Saut en l'air : on consomme une charge.
 		velocity.y = double_jump_velocity
 		_jumps_left -= 1
@@ -418,7 +418,7 @@ func _handle_jump() -> void:
 
 
 func _update_wall_grab(delta: float, on_floor: bool) -> void:
-	if not wall_grab_enabled or on_floor or _wall_jump_lock_timer > 0.0:
+	if not wall_grab_enabled or not Skills.has(&"wall_grab") or on_floor or _wall_jump_lock_timer > 0.0:
 		_is_wall_grabbing = false
 		_wall_coyote_timer = 0.0 if on_floor else maxf(_wall_coyote_timer - delta, 0.0)
 		return
@@ -609,10 +609,11 @@ func _handle_fire(delta: float) -> void:
 
 	if not Input.is_action_just_pressed("fire"):
 		return
-	if _fire_cooldown_timer > 0.0 or _fire_pending or bullet_scene == null:
+	if _fire_cooldown_timer > 0.0 or _fire_pending or bullet_scene == null or not Skills.has(&"shoot"):
 		return
 
-	_fire_cooldown_timer = fire_cooldown
+	# Les pièces du revolver (Equipment) accélèrent la cadence.
+	_fire_cooldown_timer = fire_cooldown * Equipment.fire_cooldown_multiplier()
 	_fire_anim_timer = fire_anim_time
 	# On mémorise l'orientation du tir : se retourner pendant l'animation ne
 	# change pas la trajectoire de la balle déjà amorcée.
@@ -636,6 +637,11 @@ func _spawn_bullet(facing: float) -> void:
 		return
 	bullet.direction = Vector2(facing, 0.0)
 	bullet.shooter = self
+	# Bonus des pièces montées sur le revolver, avant add_child : la balle lit
+	# sa durée de vie dans son _ready().
+	bullet.damage += Equipment.damage_bonus()
+	bullet.speed *= Equipment.bullet_speed_multiplier()
+	bullet.lifetime *= Equipment.range_multiplier()
 
 	# Le projectile vit dans le niveau, pas dans le joueur : il ne doit pas
 	# suivre ses déplacements après le tir.
@@ -660,7 +666,7 @@ func _handle_dash(delta: float, on_floor: bool) -> void:
 	if Input.is_action_just_pressed("dash"):
 		_dash_buffer_timer = dash_buffer_time
 
-	if _dash_buffer_timer <= 0.0:
+	if _dash_buffer_timer <= 0.0 or not Skills.has(&"dash"):
 		return
 	if dash_only_in_air and on_floor:
 		return
@@ -718,7 +724,7 @@ func _update_sprint(delta: float) -> void:
 
 func _handle_horizontal(delta: float, on_floor: bool) -> void:
 	var direction := Input.get_axis("move_left", "move_right")
-	var running := _is_sprinting or Input.is_action_pressed("run")
+	var running := Skills.has(&"sprint") and (_is_sprinting or Input.is_action_pressed("run"))
 	var target_speed := run_speed if running else walk_speed
 	var accel := acceleration if on_floor else air_acceleration
 	var fric := friction if on_floor else air_friction

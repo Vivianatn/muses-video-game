@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"sprint"
+display_name = "Course"
+description = "Courir plus vite en maintenant la touche de course, ou en appuyant deux fois de suite sur une direction."
+actions = Array[StringName]([&"run"])
+sort_order = 20

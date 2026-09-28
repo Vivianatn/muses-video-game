@@ -1,0 +1,140 @@
+[gd_scene format=3 uid="uid://5c24csw4dbdx"]
+
+[ext_resource type="Script" uid="uid://bj6vd0418swy5" path="res://Scripts/UI/title_screen.gd" id="1_title"]
+[ext_resource type="Theme" path="res://Scenes/UI/title_theme.tres" id="2_theme"]
+
+[sub_resource type="Gradient" id="bg_gradient"]
+colors = PackedColorArray(0.2, 0.12, 0.3, 1, 0.05, 0.04, 0.1, 1)
+
+[sub_resource type="GradientTexture2D" id="bg_texture"]
+gradient = SubResource("bg_gradient")
+fill_from = Vector2(0.5, 0)
+fill_to = Vector2(0.5, 1)
+
+[node name="TitleScreen" type="Control" unique_id=802243554 groups=["title_screen"]]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_title")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1510619823]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("bg_texture")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Menu" type="VBoxContainer" parent="." unique_id=2052866078]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -150.0
+offset_right = 150.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Menu" unique_id=2004221769]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0.3, 0.15, 0.45, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 72
+text = "Muses"
+horizontal_alignment = 1
+
+[node name="Start" type="Button" parent="Menu" unique_id=932996917]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Nouvelle partie"
+
+[node name="Continue" type="Button" parent="Menu" unique_id=1885439579]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Continuer la partie"
+
+[node name="Parameters" type="Button" parent="Menu" unique_id=2116322328]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Paramètres"
+
+[node name="Quit" type="Button" parent="Menu" unique_id=613415865]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quitter"
+
+[node name="SettingsPanel" type="PanelContainer" parent="." unique_id=1409675213]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -130.0
+offset_right = 200.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="SettingsPanel" unique_id=287310564]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel/Margin" unique_id=1732955840]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/Margin/VBox" unique_id=640198122]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
+theme_override_font_sizes/font_size = 30
+text = "Paramètres"
+horizontal_alignment = 1
+
+[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Margin/VBox" unique_id=1987402615]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Plein écran"
+
+[node name="VolumeRow" type="HBoxContainer" parent="SettingsPanel/Margin/VBox" unique_id=455120987]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeLabel" type="Label" parent="SettingsPanel/Margin/VBox/VolumeRow" unique_id=1120584736]
+layout_mode = 2
+text = "Volume"
+
+[node name="Volume" type="HSlider" parent="SettingsPanel/Margin/VBox/VolumeRow" unique_id=903377152]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="Back" type="Button" parent="SettingsPanel/Margin/VBox" unique_id=1655870249]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Retour"

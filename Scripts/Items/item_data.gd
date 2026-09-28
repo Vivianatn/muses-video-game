@@ -5,6 +5,13 @@ class_name ItemData
 ## Une fiche par objet, rangée dans res://Items/ (clic droit → Nouvelle
 ## ressource → ItemData) : l'autoload Inventory les charge toutes au démarrage.
 
+## Les rubriques de l'inventaire. Pour en ajouter une : l'ajouter ici, avec
+## son nom dans CATEGORY_NAMES, et elle apparaît dans les filtres.
+enum Category { KEY_ITEM, COLLECTIBLE, MATERIAL, CONSUMABLE }
+
+## Nom affiché de chaque rubrique, dans l'ordre de Category.
+const CATEGORY_NAMES: PackedStringArray = ["Objets clés", "Collection", "Matériaux", "Consommables"]
+
 ## Identifiant unique, utilisé par le code et les sauvegardes. Ne le change
 ## plus une fois le jeu distribué : les sauvegardes existantes le perdraient.
 @export var id: StringName = &""
@@ -18,6 +25,8 @@ class_name ItemData
 @export var max_count: int = 0
 ## Ordre d'affichage dans l'inventaire : les plus petits en premier.
 @export var sort_order: int = 0
+## Rubrique de l'inventaire, utilisée par ses filtres.
+@export var category: Category = Category.MATERIAL
 
 @export_group("Dialogues")
 ## Variable de dialogue tenue à jour avec la quantité possédée, pour que les

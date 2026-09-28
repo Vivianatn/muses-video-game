@@ -30,6 +30,90 @@ func is_gamepad() -> bool:
 	return _gamepad
 
 
+## Nom à afficher pour la touche d'une action, selon ce qui est branché :
+## « Espace », « A », « LB »... Pour le clavier, c'est la vraie lettre de la
+## disposition du joueur (AZERTY, QWERTY...). Vide si l'action n'a rien pour
+## ce périphérique.
+func action_label(action: StringName) -> String:
+	if not InputMap.has_action(action):
+		return ""
+	for event in InputMap.action_get_events(action):
+		var pad := event is InputEventJoypadButton or event is InputEventJoypadMotion
+		if pad == _gamepad:
+			var label := event_label(event)
+			if label != "":
+				return label
+	return ""
+
+
+## Nom à afficher pour une touche, un bouton ou un axe.
+static func event_label(event: InputEvent) -> String:
+	var button := event as InputEventJoypadButton
+	if button != null:
+		return PAD_BUTTON_NAMES.get(button.button_index, "Bouton %d" % button.button_index)
+
+	var motion := event as InputEventJoypadMotion
+	if motion != null:
+		match motion.axis:
+			JOY_AXIS_TRIGGER_LEFT:
+				return "LT"
+			JOY_AXIS_TRIGGER_RIGHT:
+				return "RT"
+			JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
+				return "Stick gauche"
+			_:
+				return "Stick droit"
+
+	var key := event as InputEventKey
+	if key != null:
+		var code := key.keycode
+		if key.physical_keycode != KEY_NONE:
+			code = key.physical_keycode
+			# Touche physique : on demande quelle lettre elle porte sur ce
+			# clavier (sauf sans fenêtre, où il n'y a pas de clavier à lire).
+			if DisplayServer.get_name() != "headless":
+				code = DisplayServer.keyboard_get_keycode_from_physical(key.physical_keycode)
+		var key_name := OS.get_keycode_string(code)
+		return KEY_NAMES.get(key_name, key_name)
+
+	if event is InputEventMouseButton:
+		return "Clic"
+	return ""
+
+
+const PAD_BUTTON_NAMES: Dictionary[int, String] = {
+	JOY_BUTTON_A: "A",
+	JOY_BUTTON_B: "B",
+	JOY_BUTTON_X: "X",
+	JOY_BUTTON_Y: "Y",
+	JOY_BUTTON_BACK: "Select",
+	JOY_BUTTON_GUIDE: "Guide",
+	JOY_BUTTON_START: "Start",
+	JOY_BUTTON_LEFT_STICK: "L3",
+	JOY_BUTTON_RIGHT_STICK: "R3",
+	JOY_BUTTON_LEFT_SHOULDER: "LB",
+	JOY_BUTTON_RIGHT_SHOULDER: "RB",
+	JOY_BUTTON_DPAD_UP: "↑",
+	JOY_BUTTON_DPAD_DOWN: "↓",
+	JOY_BUTTON_DPAD_LEFT: "←",
+	JOY_BUTTON_DPAD_RIGHT: "→",
+}
+
+## Noms anglais de Godot → noms affichés.
+const KEY_NAMES: Dictionary[String, String] = {
+	"Space": "Espace",
+	"Shift": "Maj",
+	"Escape": "Échap",
+	"Enter": "Entrée",
+	"Kp Enter": "Entrée",
+	"Backspace": "Retour arrière",
+	"Up": "↑",
+	"Down": "↓",
+	"Left": "←",
+	"Right": "→",
+}
+
+
 func _on_joy_connection_changed(_device: int, _connected: bool) -> void:
 	# On recompte plutôt que de se fier à `_connected` : avec deux manettes, en
 	# débrancher une ne doit pas faire revenir au clavier.
