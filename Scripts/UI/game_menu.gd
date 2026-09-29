@@ -1,8 +1,8 @@
 extends CanvasLayer
 
 ## Le menu du jeu, chargé en autoload sous le nom "GameMenu" : pause,
-## fenêtre Personnage (inventaire, équipement, compétences), sauvegarde et
-## chargement.
+## fenêtre Personnage (inventaire, équipement, compétences), sauvegarde,
+## chargement et paramètres (écran, son, commandes).
 ##
 ## Touches (Projet → Paramètres du projet → Contrôles) :
 ##   menu               Échap / Start          ouvre ou ferme le menu
@@ -58,6 +58,8 @@ var _root: Control
 var _main: Control
 var _character: Control
 var _slots: Control
+var _settings: Control
+var _settings_view: SettingsView
 var _confirm: Control
 var _hints: Dictionary[Control, Label] = {}
 
@@ -123,8 +125,9 @@ func _ready() -> void:
 	SaveGame.saved.connect(_on_saved)
 	SaveGame.failed.connect(_on_save_failed)
 	Inventory.changed.connect(_on_inventory_changed)
-	# InputDevice est chargé après GameMenu : on attend qu'il soit là.
-	_connect_input_device.call_deferred()
+	# InputDevice et Settings sont chargés après GameMenu : on attend qu'ils
+	# soient là.
+	_connect_late_autoloads.call_deferred()
 
 
 func _input(event: InputEvent) -> void:
@@ -137,6 +140,10 @@ func _input(event: InputEvent) -> void:
 			open(&"inventory")
 		return
 
+	# On attend la nouvelle touche d'une commande : la vue Paramètres garde
+	# tout pour elle.
+	if _settings_view.is_listening():
+		return
 	if event.is_action_pressed(&"menu"):
 		get_viewport().set_input_as_handled()
 		close()
@@ -185,7 +192,7 @@ func open(start: StringName = &"") -> void:
 	_root.visible = true
 	_stack.clear()
 	_focus_memory.clear()
-	for window in [_main, _character, _slots, _confirm]:
+	for window in [_main, _character, _slots, _settings, _confirm]:
 		window.visible = false
 	if start == &"inventory":
 		_tab = Tab.ITEMS
@@ -262,6 +269,8 @@ func _refresh(window: Control) -> void:
 		_refresh_character()
 	elif window == _slots:
 		_refresh_slots()
+	elif window == _settings:
+		_settings_view.refresh()
 
 
 func _focus_default(window: Control) -> void:
@@ -686,11 +695,14 @@ func _update_hint(window: Control) -> void:
 
 
 ## Rappel des touches : on bascule clavier ↔ manette dès qu'une manette est
-## branchée ou débranchée, même menu ouvert.
-func _connect_input_device() -> void:
+## branchée ou débranchée, et on suit les commandes changées, même menu ouvert.
+func _connect_late_autoloads() -> void:
 	var device := get_node_or_null(^"/root/InputDevice")
 	if device != null:
 		device.connect(&"changed", _on_input_device_changed)
+	var settings := get_node_or_null(^"/root/Settings")
+	if settings != null:
+		settings.connect(&"controls_changed", _on_input_device_changed.bind(false))
 
 
 func _on_input_device_changed(_gamepad_connected: bool) -> void:
@@ -758,6 +770,7 @@ func _build() -> void:
 	_main = _build_main()
 	_character = _build_character()
 	_slots = _build_slots()
+	_settings = _build_settings()
 	_confirm = _build_confirm()
 
 	_toast = Label.new()
@@ -826,6 +839,7 @@ func _build_main() -> Control:
 		["Personnage", func() -> void: _push(_character)],
 		["Sauvegarder", _open_slots.bind(true)],
 		["Charger", _open_slots.bind(false)],
+		["Paramètres", func() -> void: _push(_settings)],
 		["Quitter le jeu", _on_quit],
 	]:
 		var button := Button.new()
@@ -1032,6 +1046,16 @@ func _build_slots() -> Control:
 	return parts[0]
 
 
+func _build_settings() -> Control:
+	var parts := _make_window("Paramètres")
+	_settings_view = SettingsView.new()
+	_settings_view.accent_color = accent_color
+	_settings_view.dim_text_color = dim_text_color
+	_settings_view.small_size = small_size
+	(parts[1] as VBoxContainer).add_child(_settings_view)
+	return parts[0]
+
+
 func _build_confirm() -> Control:
 	var parts := _make_window("Confirmation")
 	var body: VBoxContainer = parts[1]
@@ -1083,6 +1107,17 @@ func _make_theme() -> Theme:
 	theme.set_color(&"font_pressed_color", &"Button", accent_color)
 	theme.set_color(&"font_hover_pressed_color", &"Button", accent_color)
 	theme.set_color(&"font_disabled_color", &"Button", dim_text_color.darkened(0.3))
+	# Les cases à cocher (Paramètres) suivent les boutons.
+	for state in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled", &"focus"]:
+		theme.set_stylebox(state, &"CheckButton", theme.get_stylebox(state, &"Button"))
+	theme.set_font_size(&"font_size", &"CheckButton", text_size)
+	theme.set_color(&"font_color", &"CheckButton", text_color)
+	theme.set_color(&"font_hover_color", &"CheckButton", accent_color)
+	theme.set_color(&"font_focus_color", &"CheckButton", accent_color)
+	theme.set_color(&"font_pressed_color", &"CheckButton", text_color)
+	theme.set_color(&"font_hover_pressed_color", &"CheckButton", accent_color)
+	# Le curseur du volume montre aussi la sélection.
+	theme.set_stylebox(&"focus", &"HSlider", _box(Color.TRANSPARENT, accent_color, 3, 8, 4))
 	theme.set_font_size(&"font_size", &"Label", text_size)
 	theme.set_color(&"font_color", &"Label", text_color)
 	return theme

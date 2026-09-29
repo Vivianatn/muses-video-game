@@ -59,10 +59,14 @@ static func event_label(event: InputEvent) -> String:
 				return "LT"
 			JOY_AXIS_TRIGGER_RIGHT:
 				return "RT"
-			JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
-				return "Stick gauche"
+			JOY_AXIS_LEFT_X, JOY_AXIS_RIGHT_X:
+				var stick := "Stick gauche" if motion.axis == JOY_AXIS_LEFT_X else "Stick droit"
+				return stick + (" ←" if motion.axis_value < 0.0 else " →")
+			JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_Y:
+				var stick := "Stick gauche" if motion.axis == JOY_AXIS_LEFT_Y else "Stick droit"
+				return stick + (" ↑" if motion.axis_value < 0.0 else " ↓")
 			_:
-				return "Stick droit"
+				return "Axe %d" % motion.axis
 
 	var key := event as InputEventKey
 	if key != null:

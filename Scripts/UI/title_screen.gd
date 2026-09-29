@@ -5,6 +5,10 @@ extends Control
 ##
 ## La scène est dans le groupe "title_screen" : GameMenu ne s'y ouvre pas et
 ## SaveGame n'y fait ni temps de jeu ni sauvegarde automatique.
+##
+## Le contenu des paramètres (écran, son, commandes) est une SettingsView,
+## la même que dans le menu en jeu : elle est ajoutée en code au-dessus du
+## bouton Retour.
 
 ## Le niveau lancé par « Nouvelle partie ».
 @export_file("*.tscn") var first_level: String = "res://Scenes/Levels/scene_test.tscn"
@@ -16,9 +20,9 @@ extends Control
 @onready var _quit: Button = %Quit
 
 @onready var _settings: Control = %SettingsPanel
-@onready var _fullscreen: CheckButton = %Fullscreen
-@onready var _volume: HSlider = %Volume
 @onready var _back: Button = %Back
+
+var _settings_view: SettingsView
 
 
 func _ready() -> void:
@@ -27,8 +31,11 @@ func _ready() -> void:
 	_parameters.pressed.connect(_open_settings)
 	_quit.pressed.connect(get_tree().quit)
 
-	_fullscreen.toggled.connect(Settings.set_fullscreen)
-	_volume.value_changed.connect(Settings.set_master_volume)
+	_settings_view = SettingsView.new()
+	_back.add_sibling(_settings_view)
+	_back.get_parent().move_child(_settings_view, _back.get_index())
+	_back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_back.custom_minimum_size.x = 200
 	_back.pressed.connect(_close_settings)
 
 	# « Continuer » n'apparaît que s'il existe une sauvegarde.
@@ -60,12 +67,11 @@ func _on_continue() -> void:
 
 
 func _open_settings() -> void:
-	# set_value_no_signal : afficher l'état actuel sans le réenregistrer.
-	_fullscreen.set_pressed_no_signal(Settings.fullscreen)
-	_volume.set_value_no_signal(Settings.master_volume)
+	# Afficher l'état actuel sans le réenregistrer.
+	_settings_view.refresh()
 	_menu.visible = false
 	_settings.visible = true
-	_fullscreen.grab_focus()
+	_settings_view.focus_first()
 
 
 func _close_settings() -> void:
