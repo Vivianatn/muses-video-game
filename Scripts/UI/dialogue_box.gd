@@ -2,7 +2,9 @@ extends CanvasLayer
 class_name DialogueBox
 
 ## L'affichage d'un dialogue : portrait, nom, texte qui se tape tout seul, et
-## boutons de choix. Elle ne décide de rien — c'est l'autoload Dialogues qui
+## boutons de choix. La boîte court sur toute la largeur de l'écran et reste
+## basse ; les choix flottent à gauche, au-dessus d'elle, sur des faces
+## translucides, pour laisser voir le jeu. Elle ne décide de rien — c'est l'autoload Dialogues qui
 ## lui dit quoi montrer et qui écoute ses signaux.
 ##
 ## Une copie est créée automatiquement par l'autoload. Pour une présentation
@@ -36,18 +38,19 @@ signal choice_selected(index: int)
 ## Portrait par personnage : la clé est le nom écrit dans le dialogue.
 ## Une réplique peut toujours imposer le sien via DialogueLine.portrait.
 @export var portraits: Dictionary[String, Texture2D] = {}
-## Couleur du nom par personnage, pour les distinguer d'un coup d'œil.
+## Couleur du nom par personnage, pour les distinguer d'un coup d'œil. Le nom
+## est écrit sur l'en-tête bordeaux : la DA y permet parchemin, argile, sève.
 @export var speaker_colors: Dictionary[String, Color] = {}
 ## Couleur utilisée pour un personnage absent de speaker_colors.
-@export var default_speaker_color: Color = Color(1, 0.86, 0.55)
+@export var default_speaker_color: Color = Muses.PARCHEMIN
 
 @export_group("Tailles de texte")
-## Taille du texte des répliques.
-@export_range(8, 72, 1) var text_size: int = 26
-## Taille du nom du personnage, au-dessus de la réplique.
-@export_range(8, 72, 1) var speaker_size: int = 30
+## Taille du texte des répliques (police Barlow, style « Dialogue »).
+@export_range(8, 72, 1) var text_size: int = 19
+## Taille du nom du personnage, dans l'en-tête (style « titre de panneau »).
+@export_range(8, 72, 1) var speaker_size: int = 18
 ## Taille du texte des options de choix.
-@export_range(8, 72, 1) var choice_size: int = 24
+@export_range(8, 72, 1) var choice_size: int = 19
 
 @export_group("Apparence")
 ## La boîte se règle sur la hauteur de son contenu au lieu de garder la hauteur
@@ -56,15 +59,22 @@ signal choice_selected(index: int)
 @export var auto_height: bool = true
 ## Hauteur (px) en deçà de laquelle la boîte ne descend pas, quand auto_height
 ## est actif.
-@export var min_height: float = 110.0
+@export var min_height: float = 76.0
+## Écart (px) entre les choix et le haut de la boîte.
+@export var choices_gap: float = 16.0
 ## Durée (s) du fondu à l'ouverture et à la fermeture. 0 = apparition sèche.
 @export var fade_time: float = 0.12
 ## Taille du portrait. Mets (0, 0) pour garder la taille de l'image.
-@export var portrait_size: Vector2 = Vector2(72, 72)
+@export var portrait_size: Vector2 = Vector2(56, 56)
 ## Le petit signe clignotant qui indique qu'on peut continuer.
 @export var continue_hint: String = "▼"
 
+const Motion := preload("res://Scripts/UI/motion.gd")
+
+@onready var root: Control = $Root
 @onready var panel: PanelContainer = %Panel
+@onready var header: Control = %Header
+@onready var header_circuit: Control = %HeaderCircuit
 @onready var portrait_rect: TextureRect = %Portrait
 @onready var speaker_label: Label = %Speaker
 @onready var body: RichTextLabel = %Body
@@ -83,12 +93,45 @@ var _tween: Tween = null
 func _ready() -> void:
 	# La boîte reste vivante et lisible même quand le jeu est en pause.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# L'interface bouge au rythme de l'affichage (tweens, _process) : on la
+	# sort de l'interpolation physique, qui ne vaut que pour le monde.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	indicator.text = continue_hint
 	_apply_text_sizes()
 	_hide_now()
+	_prewarm()
+
+
+## Dessine la boîte une fois au lancement, presque transparente (1 %), avec
+## un texte en gras et en italique et une option : ses polices et ses styles
+## sont prêts avant le premier dialogue, qui ne fige plus le jeu.
+func _prewarm() -> void:
+	await get_tree().process_frame
+	if _line != null:
+		return
+	speaker_label.text = "Muses"
+	body.text = "Muses [b]Muses[/b] [i]Muses[/i] ÀÉÈÊÇàéèêç"
+	var sample := Button.new()
+	sample.theme_type_variation = &"Choix"
+	sample.text = body.text
+	choices_box.add_child(sample)
+	choices_box.visible = true
+	panel.modulate.a = 0.01
+	panel.visible = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	choices_box.remove_child(sample)
+	sample.queue_free()
+	choices_box.visible = false
+	body.text = ""
+	# Un dialogue a pu commencer entre-temps : on ne cache que si rien ne joue.
+	if _line == null:
+		_hide_now()
 
 
 func _process(delta: float) -> void:
+	if not panel.visible:
+		return
 	# Recalculé en continu : le RichTextLabel ne connaît sa hauteur définitive
 	# qu'après la mise en page, soit une frame après avoir reçu son texte.
 	_fit_height()
@@ -141,6 +184,12 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- Appelé par l'autoload ------------------------------------------------
 
 func open() -> void:
+	if not visible_now():
+		# La boîte monte du bas de l'écran en apparaissant.
+		root.position.y = 24.0
+		var tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.tween_property(root, ^"position:y", 0.0, 0.3) \
+				.set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
 	panel.visible = true
 	_fade_to(1.0)
 
@@ -193,7 +242,9 @@ func _apply_text_sizes() -> void:
 
 func _apply_speaker(line: DialogueLine) -> void:
 	var has_speaker := not line.speaker.is_empty()
-	speaker_label.visible = has_speaker
+	# Sans nom (narration), le panneau n'a pas d'en-tête.
+	header.visible = has_speaker
+	header_circuit.visible = has_speaker
 	speaker_label.text = line.speaker
 
 	var color := default_speaker_color
@@ -249,8 +300,12 @@ func _finish_typing() -> void:
 func _build_choices(choices: Array[DialogueChoice]) -> void:
 	for i in choices.size():
 		var button := Button.new()
+		button.theme_type_variation = &"Choix"
+		button.custom_minimum_size.y = Muses.CIBLE_MIN
 		button.text = choices[i].text
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		# La colonne a une largeur fixe : une option longue passe à la ligne.
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.focus_mode = Control.FOCUS_ALL
 		button.add_theme_font_size_override(&"font_size", choice_size)
 		button.pressed.connect(_on_choice_pressed.bind(i))
@@ -263,6 +318,8 @@ func _build_choices(choices: Array[DialogueChoice]) -> void:
 		button.focus_previous = ^"."
 
 	choices_box.visible = true
+	# Les options arrivent de la gauche, l'une après l'autre.
+	Motion.cascade(choices_box.get_children(), Vector2(-28, 0), 0.06, 0.28)
 	# Le premier bouton prend le focus : le dialogue reste jouable au clavier
 	# et à la manette, sans obliger à viser à la souris.
 	if choices_box.get_child_count() > 0:
@@ -345,8 +402,10 @@ func _hide_now() -> void:
 
 ## Règle la hauteur de la boîte sur celle de son contenu. Les ancres du Panel
 ## sont collées au bas de l'écran, donc c'est offset_top qui porte la hauteur.
+## Les choix se posent juste au-dessus, et montent quand ils sont nombreux.
 func _fit_height() -> void:
-	if not auto_height:
-		return
-	var needed := maxf(panel.get_combined_minimum_size().y, min_height)
-	panel.offset_top = panel.offset_bottom - needed
+	if auto_height:
+		var needed := maxf(panel.get_combined_minimum_size().y, min_height)
+		panel.offset_top = panel.offset_bottom - needed
+	choices_box.offset_bottom = panel.offset_top - choices_gap
+	choices_box.offset_top = choices_box.offset_bottom - choices_box.get_combined_minimum_size().y

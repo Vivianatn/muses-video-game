@@ -230,6 +230,7 @@ autoplay = "idle"
 shape = SubResource("CapsuleShape2D_gmhmn")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=724143031]
+process_callback = 0
 zoom = Vector2(2, 2)
 limit_left = 0
 limit_smoothed = true

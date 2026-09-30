@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/studio_splash.gd" id="1_splash"]
+[ext_resource type="VideoStream" path="res://Multimédia/tharros-logo-anime.ogv" id="2_video"]
+
+[node name="StudioSplash" type="Control" groups=["title_screen"]]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_splash")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.08627451, 0.07058824, 0.05882353, 1)
+
+[node name="Frame" type="AspectRatioContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+ratio = 1.7778
+
+[node name="Video" type="VideoStreamPlayer" parent="Frame"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+stream = ExtResource("2_video")
+expand = true
+
+[node name="Veil" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.078431375, 0.043137256, 0.047058824, 0)

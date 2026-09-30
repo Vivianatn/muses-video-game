@@ -1,24 +1,7 @@
 [gd_scene format=3 uid="uid://cdlgbox0muses"]
 
 [ext_resource type="Script" path="res://Scripts/UI/dialogue_box.gd" id="1_dbox"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-content_margin_left = 20.0
-content_margin_top = 16.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-bg_color = Color(0.08, 0.08, 0.1, 0.92)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.85, 0.72, 0.45, 0.85)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0, 0, 0, 0.35)
-shadow_size = 8
+[ext_resource type="Script" path="res://Scripts/UI/circuit.gd" id="2_circuit"]
 
 [node name="DialogueBox" type="CanvasLayer"]
 layer = 20
@@ -42,59 +25,92 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 48.0
-offset_top = -160.0
-offset_right = -48.0
-offset_bottom = -36.0
+offset_left = 40.0
+offset_top = -112.0
+offset_right = -40.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_type_variation = &"PanneauEntete"
 
-[node name="Columns" type="HBoxContainer" parent="Root/Panel"]
+[node name="Frame" type="VBoxContainer" parent="Root/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="PanelContainer" parent="Root/Panel/Frame"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"EnteteCompact"
+
+[node name="Speaker" type="Label" parent="Root/Panel/Frame/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitrePanneau"
+text = "Nom"
+uppercase = true
+
+[node name="HeaderCircuit" type="MarginContainer" parent="Root/Panel/Frame"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+
+[node name="Circuit" type="Control" parent="Root/Panel/Frame/HeaderCircuit"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_circuit")
+
+[node name="Margin" type="MarginContainer" parent="Root/Panel/Frame"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 10
+
+[node name="Columns" type="HBoxContainer" parent="Root/Panel/Frame/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Portrait" type="TextureRect" parent="Root/Panel/Columns"]
+[node name="Portrait" type="TextureRect" parent="Root/Panel/Frame/Margin/Columns"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(72, 72)
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_vertical = 0
 texture_filter = 1
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Content" type="VBoxContainer" parent="Root/Panel/Columns"]
+[node name="Body" type="RichTextLabel" parent="Root/Panel/Frame/Margin/Columns"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="Speaker" type="Label" parent="Root/Panel/Columns/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 22
-text = "Nom"
-
-[node name="Body" type="RichTextLabel" parent="Root/Panel/Columns/Content"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
+theme_type_variation = &"Dialogue"
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 text = ""
 
-[node name="Choices" type="VBoxContainer" parent="Root/Panel/Columns/Content"]
+[node name="Indicator" type="Label" parent="Root/Panel/Frame/Margin/Columns"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Indicator" type="Label" parent="Root/Panel/Columns/Content"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.72, 0.45, 1)
+size_flags_vertical = 8
+theme_override_colors/font_color = Color(0.65882355, 0.81960785, 0.5529412, 1)
 text = "▼"
-horizontal_alignment = 2
+
+[node name="Choices" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -160.0
+offset_right = 420.0
+offset_bottom = -128.0
+grow_vertical = 0
+theme_override_constants/separation = 8

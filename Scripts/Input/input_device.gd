@@ -54,15 +54,22 @@ static func event_label(event: InputEvent) -> String:
 
 	var motion := event as InputEventJoypadMotion
 	if motion != null:
+		# Le sens compte : gauche et droite sont deux actions différentes.
+		var arrow := ""
+		match motion.axis:
+			JOY_AXIS_LEFT_X, JOY_AXIS_RIGHT_X:
+				arrow = " ←" if motion.axis_value < 0.0 else " →"
+			JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_Y:
+				arrow = " ↑" if motion.axis_value < 0.0 else " ↓"
 		match motion.axis:
 			JOY_AXIS_TRIGGER_LEFT:
 				return "LT"
 			JOY_AXIS_TRIGGER_RIGHT:
 				return "RT"
 			JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y:
-				return "Stick gauche"
+				return "Stick gauche" + arrow
 			_:
-				return "Stick droit"
+				return "Stick droit" + arrow
 
 	var key := event as InputEventKey
 	if key != null:

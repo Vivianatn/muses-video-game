@@ -62,7 +62,9 @@ func _ready() -> void:
 	_time = randf() * 10.0
 
 
-func _process(delta: float) -> void:
+# Dans _physics_process, pas _process : l'interpolation physique lisse alors
+# le flottement, quel que soit le rythme de l'écran.
+func _physics_process(delta: float) -> void:
 	if _collected:
 		return
 	_time += delta

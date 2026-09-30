@@ -650,6 +650,8 @@ func _spawn_bullet(facing: float) -> void:
 
 	# Le canon suit l'orientation du personnage.
 	bullet.global_position = global_position + Vector2(muzzle.position.x * facing, muzzle.position.y)
+	# Il naît au bout du canon : pas de trainée depuis l'origine du niveau.
+	bullet.reset_physics_interpolation()
 
 
 func _is_dashing() -> bool:
@@ -905,7 +907,15 @@ func load_state(data: Dictionary) -> void:
 		# Sinon le « saut » jusqu'au point de sauvegarde compterait comme une chute.
 		_fall_peak_y = global_position.y
 		# La caméra rejoint le joueur d'un coup au lieu de traverser le niveau.
+		# reset_smoothing() place la caméra sur le joueur mais n'affiche ce
+		# placement qu'à sa prochaine mise à jour, faite au rythme de la
+		# physique. La transition « Continuer » fige le jeu : sans mise à jour
+		# forcée, la caméra resterait montrée près du point d'apparition,
+		# puis glisserait vers le joueur à la reprise.
 		camera.reset_smoothing()
+		camera.force_update_scroll()
+		# Idem pour l'interpolation physique : pas de glissade depuis l'ancienne place.
+		reset_physics_interpolation()
 	if data.has("health"):
 		_health = clampi(int(data.health), 1, max_health)
 		health_changed.emit(_health, max_health)

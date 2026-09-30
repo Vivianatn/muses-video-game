@@ -1,15 +1,9 @@
 [gd_scene format=3 uid="uid://5c24csw4dbdx"]
 
 [ext_resource type="Script" uid="uid://bj6vd0418swy5" path="res://Scripts/UI/title_screen.gd" id="1_title"]
-[ext_resource type="Theme" path="res://Scenes/UI/title_theme.tres" id="2_theme"]
-
-[sub_resource type="Gradient" id="bg_gradient"]
-colors = PackedColorArray(0.2, 0.12, 0.3, 1, 0.05, 0.04, 0.1, 1)
-
-[sub_resource type="GradientTexture2D" id="bg_texture"]
-gradient = SubResource("bg_gradient")
-fill_from = Vector2(0.5, 0)
-fill_to = Vector2(0.5, 1)
+[ext_resource type="Texture2D" path="res://muses-logo-4k.png" id="3_logo"]
+[ext_resource type="Script" path="res://Scripts/UI/circuit.gd" id="4_circuit"]
+[ext_resource type="Script" path="res://Scripts/UI/controls_panel.gd" id="5_controls"]
 
 [node name="TitleScreen" type="Control" unique_id=802243554 groups=["title_screen"]]
 layout_mode = 3
@@ -18,19 +12,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2_theme")
 script = ExtResource("1_title")
 
-[node name="Background" type="TextureRect" parent="." unique_id=1510619823]
+[node name="Background" type="ColorRect" parent="." unique_id=1510619823]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("bg_texture")
-expand_mode = 1
-stretch_mode = 6
+color = Color(0.078431375, 0.043137256, 0.047058824, 1)
 
 [node name="Menu" type="VBoxContainer" parent="." unique_id=2052866078]
 unique_name_in_owner = true
@@ -40,42 +31,75 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -150.0
-offset_right = 150.0
-offset_bottom = 150.0
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Menu" unique_id=2004221769]
+[node name="Logo" type="TextureRect" parent="Menu" unique_id=2004221769]
+custom_minimum_size = Vector2(600, 171)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_colors/font_outline_color = Color(0.3, 0.15, 0.45, 1)
-theme_override_constants/outline_size = 12
-theme_override_font_sizes/font_size = 72
-text = "Muses"
-horizontal_alignment = 1
+texture_filter = 4
+texture = ExtResource("3_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LogoSpacer" type="Control" parent="Menu" unique_id=2004221770]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+
+[node name="Circuit" type="Control" parent="Menu" unique_id=1740382213]
+custom_minimum_size = Vector2(300, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("4_circuit")
+vegetal = true
+
+[node name="CircuitSpacer" type="Control" parent="Menu" unique_id=1740382214]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
 
 [node name="Start" type="Button" parent="Menu" unique_id=932996917]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
 layout_mode = 2
-text = "Nouvelle partie"
+size_flags_horizontal = 4
+text = "NOUVELLE PARTIE"
 
 [node name="Continue" type="Button" parent="Menu" unique_id=1885439579]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
 layout_mode = 2
-text = "Continuer la partie"
+size_flags_horizontal = 4
+text = "CONTINUER"
+
+[node name="Load" type="Button" parent="Menu" unique_id=1885439580]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"BoutonSecondaire"
+text = "CHARGER"
 
 [node name="Parameters" type="Button" parent="Menu" unique_id=2116322328]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
 layout_mode = 2
-text = "Paramètres"
+size_flags_horizontal = 4
+theme_type_variation = &"BoutonSecondaire"
+text = "PARAMÈTRES"
 
 [node name="Quit" type="Button" parent="Menu" unique_id=613415865]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 48)
 layout_mode = 2
-text = "Quitter"
+size_flags_horizontal = 4
+theme_type_variation = &"BoutonSecondaire"
+text = "QUITTER"
 
 [node name="SettingsPanel" type="PanelContainer" parent="." unique_id=1409675213]
 unique_name_in_owner = true
@@ -93,40 +117,62 @@ offset_right = 200.0
 offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"PanneauEntete"
 
-[node name="Margin" type="MarginContainer" parent="SettingsPanel" unique_id=287310564]
+[node name="Frame" type="VBoxContainer" parent="SettingsPanel" unique_id=287310564]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
+theme_override_constants/separation = 0
 
-[node name="VBox" type="VBoxContainer" parent="SettingsPanel/Margin" unique_id=1732955840]
+[node name="Header" type="PanelContainer" parent="SettingsPanel/Frame" unique_id=1316207453]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_type_variation = &"Entete"
 
-[node name="SettingsTitle" type="Label" parent="SettingsPanel/Margin/VBox" unique_id=640198122]
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/Frame/Header" unique_id=640198122]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 30
+theme_type_variation = &"TitrePanneau"
 text = "Paramètres"
-horizontal_alignment = 1
+uppercase = true
 
-[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Margin/VBox" unique_id=1987402615]
+[node name="HeaderCircuit" type="MarginContainer" parent="SettingsPanel/Frame" unique_id=1316207454]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+
+[node name="Circuit" type="Control" parent="SettingsPanel/Frame/HeaderCircuit" unique_id=1316207455]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("4_circuit")
+
+[node name="Margin" type="MarginContainer" parent="SettingsPanel/Frame" unique_id=1316207456]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel/Frame/Margin" unique_id=1732955840]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Fullscreen" type="CheckButton" parent="SettingsPanel/Frame/Margin/VBox" unique_id=1987402615]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Plein écran"
+text = "PLEIN ÉCRAN"
 
-[node name="VolumeRow" type="HBoxContainer" parent="SettingsPanel/Margin/VBox" unique_id=455120987]
+[node name="VolumeRow" type="HBoxContainer" parent="SettingsPanel/Frame/Margin/VBox" unique_id=455120987]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
-[node name="VolumeLabel" type="Label" parent="SettingsPanel/Margin/VBox/VolumeRow" unique_id=1120584736]
+[node name="VolumeLabel" type="Label" parent="SettingsPanel/Frame/Margin/VBox/VolumeRow" unique_id=1120584736]
 layout_mode = 2
+theme_type_variation = &"HudEtiquette"
 text = "Volume"
+uppercase = true
 
-[node name="Volume" type="HSlider" parent="SettingsPanel/Margin/VBox/VolumeRow" unique_id=903377152]
+[node name="Volume" type="HSlider" parent="SettingsPanel/Frame/Margin/VBox/VolumeRow" unique_id=903377152]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -134,7 +180,34 @@ max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="Back" type="Button" parent="SettingsPanel/Margin/VBox" unique_id=1655870249]
+[node name="Controls" type="Button" parent="SettingsPanel/Frame/Margin/VBox" unique_id=1655870250]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Retour"
+theme_type_variation = &"BoutonSecondaire"
+text = "TOUCHES"
+
+[node name="Back" type="Button" parent="SettingsPanel/Frame/Margin/VBox" unique_id=1655870249]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "RETOUR"
+
+[node name="ControlsPanel" type="PanelContainer" parent="." unique_id=1655870251]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(720, 560)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -280.0
+offset_right = 360.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_controls")

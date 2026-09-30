@@ -1,8 +1,12 @@
 extends CanvasLayer
 
 ## Le menu du jeu, chargé en autoload sous le nom "GameMenu" : pause,
-## fenêtre Personnage (inventaire, équipement, compétences), sauvegarde et
-## chargement.
+## fenêtre Personnage (inventaire, équipement, compétences), sauvegarde,
+## chargement, paramètres (plein écran, volume, touches) et retour à l'écran
+## titre. On quitte le jeu depuis l'écran titre.
+##
+## L'écran titre s'en sert aussi, pour sa seule liste des sauvegardes :
+## voir open_load_picker().
 ##
 ## Touches (Projet → Paramètres du projet → Contrôles) :
 ##   menu               Échap / Start          ouvre ou ferme le menu
@@ -15,8 +19,9 @@ extends CanvasLayer
 ## la sélection là où on l'avait laissée. Retour sur la dernière = le menu se
 ## ferme. Le jeu est en pause tant que le menu est ouvert.
 ##
-## Toute l'interface est construite en code (_build) : l'apparence se règle
-## avec les champs du groupe « Apparence ».
+## Toute l'interface est construite en code (_build). Son apparence vient du
+## thème du projet (Scenes/UI/muses_theme.tres, la DA « Muses ») : chaque
+## nœud n'y choisit qu'un style, par son theme_type_variation.
 
 signal opened
 signal closed
@@ -24,31 +29,31 @@ signal closed
 ## Le script de SaveGame, pour appeler ses fonctions statiques sans passer
 ## par l'instance de l'autoload.
 const SaveGameScript := preload("res://Scripts/Save/save_game.gd")
+const Motion := preload("res://Scripts/UI/motion.gd")
+## L'écran titre, où mène le bouton « Écran titre » de la pause.
+const TITLE_SCENE := "res://Scenes/UI/title_screen.tscn"
+const ControlsPanelScript := preload("res://Scripts/UI/controls_panel.gd")
 
 @export_group("Apparence")
-@export var accent_color: Color = Color(1, 0.86, 0.55)
-@export var text_color: Color = Color(0.93, 0.91, 0.87)
-@export var dim_text_color: Color = Color(0.6, 0.58, 0.55)
-@export var panel_color: Color = Color(0.07, 0.06, 0.09, 0.95)
-@export var button_color: Color = Color(1, 1, 1, 0.06)
-## Voile posé sur le jeu derrière le menu.
-@export var backdrop_color: Color = Color(0, 0, 0, 0.55)
-@export_range(8, 72, 1) var title_size: int = 34
-@export_range(8, 72, 1) var text_size: int = 22
-@export_range(8, 72, 1) var small_size: int = 16
 ## Taille (px) de toutes les fenêtres du menu. Elle est la même pour toutes
-## et ne bouge jamais : ce qui dépasse défile à l'intérieur.
-@export var window_size: Vector2 = Vector2(900, 560)
+## et ne bouge jamais : ce qui dépasse défile à l'intérieur. La DA limite la
+## largeur d'un panneau à 720 px.
+@export var window_size: Vector2 = Vector2(720, 560)
+## Durée (s) d'affichage d'une notification. Les suivantes attendent leur tour.
+@export var notice_time: float = 3.0
 
 @export_group("Inventaire")
 ## Nombre de cases par ligne.
-@export var inventory_columns: int = 6
+@export var inventory_columns: int = 5
 ## Nombre de cases affichées au minimum, même vides.
-@export var inventory_min_slots: int = 18
+@export var inventory_min_slots: int = 15
 ## Côté (px) d'une case.
-@export var inventory_slot_size: int = 72
+@export var inventory_slot_size: int = Muses.EMPLACEMENT
 
 var _open: bool = false
+## Liste des sauvegardes ouverte depuis l'écran titre : reçoit l'emplacement
+## choisi. Invalide en jeu, où l'on charge soi-même.
+var _pick_slot: Callable
 ## Fenêtres ouvertes, de la plus ancienne à celle affichée.
 var _stack: Array[Control] = []
 ## Pour chaque fenêtre recouverte, le bouton qui avait la sélection.
@@ -56,9 +61,17 @@ var _focus_memory: Dictionary[Control, Control] = {}
 
 var _root: Control
 var _main: Control
+## Les boutons de la pause, qui entrent en cascade.
+var _main_buttons: Array[Control] = []
 var _character: Control
 var _slots: Control
 var _confirm: Control
+var _settings: Control
+## La fenêtre des touches : le panneau de l'écran titre, construit à la
+## première ouverture (il interroge l'autoload Settings, chargé après ce menu).
+var _controls: Control
+var _fullscreen: CheckButton
+var _volume: HSlider
 var _hints: Dictionary[Control, Label] = {}
 
 ## Les onglets de la fenêtre Personnage, dans l'ordre de TAB_NAMES.
@@ -77,7 +90,9 @@ var _filter_prev_key: Label
 var _filter_next_key: Label
 
 var _inv_grid: GridContainer
+var _inv_detail: VBoxContainer
 var _inv_icon: TextureRect
+var _inv_category: Label
 var _inv_name: Label
 var _inv_count: Label
 var _inv_desc: Label
@@ -110,13 +125,20 @@ var _confirm_yes: Button
 var _confirm_no: Button
 var _confirm_action: Callable
 
-var _toast: Label
-var _toast_tween: Tween
+## Notification en haut de l'écran : une à la fois, les suivantes attendent.
+var _notice: Control
+var _notice_category: Label
+var _notice_text: Label
+var _notice_tween: Tween
+var _notice_queue: Array[Array] = []
 
 
 func _ready() -> void:
 	layer = 50
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# L'interface bouge au rythme de l'affichage (tweens, _process) : on la
+	# sort de l'interpolation physique, qui ne vaut que pour le monde.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_build()
 	_root.visible = false
 
@@ -125,6 +147,48 @@ func _ready() -> void:
 	Inventory.changed.connect(_on_inventory_changed)
 	# InputDevice est chargé après GameMenu : on attend qu'il soit là.
 	_connect_input_device.call_deferred()
+	_prewarm()
+
+
+## Godot prépare polices et styles la première fois qu'il les dessine : sans
+## ça, la toute première ouverture du menu fige le jeu un dixième de seconde.
+## On dessine donc chaque fenêtre une fois au lancement, presque transparente
+## (1 %), le temps d'une image ou deux.
+func _prewarm() -> void:
+	await get_tree().process_frame
+	if _open:
+		return
+	_root.modulate.a = 0.01
+	_root.visible = true
+	var windows: Array[Control] = [_main, _slots, _confirm, _settings]
+	for window in windows:
+		_refresh(window)
+		window.visible = true
+		await _two_frames()
+		window.visible = false
+	# Les trois onglets de la fenêtre Personnage.
+	_character.visible = true
+	for tab in TAB_NAMES.size():
+		_tab = tab
+		_refresh_character()
+		await _two_frames()
+	_character.visible = false
+	_tab = Tab.ITEMS
+	if not _open:
+		_root.visible = false
+	_root.modulate.a = 1.0
+	# Le bandeau de notification, lui aussi.
+	_notice_category.text = "Sauvegarde"
+	_notice_text.text = "Partie sauvegardée"
+	_notice.modulate.a = 0.01
+	await _two_frames()
+	if _notice_tween == null or not _notice_tween.is_valid():
+		_notice.modulate.a = 0.0
+
+
+func _two_frames() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
 
 
 func _input(event: InputEvent) -> void:
@@ -183,10 +247,11 @@ func open(start: StringName = &"") -> void:
 	_open = true
 	get_tree().paused = true
 	_root.visible = true
+	# Le voile et la fenêtre apparaissent en fondu.
+	Motion.fade_in(_root, 0.18)
 	_stack.clear()
 	_focus_memory.clear()
-	for window in [_main, _character, _slots, _confirm]:
-		window.visible = false
+	_hide_windows()
 	if start == &"inventory":
 		_tab = Tab.ITEMS
 		_push(_character)
@@ -195,11 +260,31 @@ func open(start: StringName = &"") -> void:
 	opened.emit()
 
 
+## Ouvre seulement la liste des sauvegardes, pour en choisir une (bouton
+## « Charger » de l'écran titre). Rien n'est mis en pause : il n'y a pas de
+## partie en cours. Le menu se referme au choix, puis `on_pick` reçoit
+## l'emplacement : c'est à l'écran titre de le charger, avec sa transition.
+func open_load_picker(on_pick: Callable) -> void:
+	if _open:
+		return
+	_open = true
+	_pick_slot = on_pick
+	_root.visible = true
+	Motion.fade_in(_root, 0.18)
+	_stack.clear()
+	_focus_memory.clear()
+	_hide_windows()
+	_open_slots(false)
+	opened.emit()
+
+
 func close() -> void:
 	if not _open:
 		return
 	_open = false
-	_root.visible = false
+	_pick_slot = Callable()
+	# Fondu de sortie ; si le menu a été rouvert entre-temps, il reste visible.
+	Motion.fade_out(_root, 0.15, func() -> void: _root.visible = _open)
 	_stack.clear()
 	_focus_memory.clear()
 	get_viewport().gui_release_focus()
@@ -224,6 +309,7 @@ func back() -> void:
 	var below := _top()
 	_refresh(below)
 	below.visible = true
+	_animate_window(below, false)
 	_update_hint(below)
 
 	var remembered: Control = _focus_memory.get(below)
@@ -242,8 +328,16 @@ func _push(window: Control) -> void:
 	_stack.append(window)
 	_refresh(window)
 	window.visible = true
+	_animate_window(window, true)
 	_update_hint(window)
 	_focus_default(window)
+
+
+## La fenêtre surgit ; celle de la pause fait entrer ses boutons un à un.
+func _animate_window(window: Control, first_time: bool) -> void:
+	Motion.pop_in(window.get_child(0) as Control)
+	if first_time and window == _main:
+		Motion.cascade(_main_buttons, Vector2(0, 14), 0.05)
 
 
 func _top() -> Control:
@@ -257,11 +351,23 @@ func _can_open() -> bool:
 	return not Dialogues.is_active() and not SaveGame.is_busy()
 
 
+func _hide_windows() -> void:
+	for window: Control in [_main, _character, _slots, _confirm, _settings, _controls]:
+		if window != null:
+			window.visible = false
+
+
 func _refresh(window: Control) -> void:
 	if window == _character:
 		_refresh_character()
 	elif window == _slots:
 		_refresh_slots()
+	elif window == _settings:
+		# set_value_no_signal : afficher l'état actuel sans le réenregistrer.
+		_fullscreen.set_pressed_no_signal(Settings.fullscreen)
+		_volume.set_value_no_signal(Settings.master_volume)
+	elif window == _controls:
+		(window.get_child(0) as Control).call(&"open")
 
 
 func _focus_default(window: Control) -> void:
@@ -310,8 +416,40 @@ func _on_resume() -> void:
 	close()
 
 
-func _on_quit() -> void:
-	_ask("Quitter le jeu ?\nLa progression non sauvegardée sera perdue.", get_tree().quit)
+func _on_title_screen() -> void:
+	_ask("Retourner à l'écran titre ?\nLa progression non sauvegardée sera perdue.", _go_to_title)
+
+
+## Retour à l'écran titre : fondu vers la nuit, puis l'écran titre, qui fait
+## sa propre entrée. Le voile vit à la racine de l'arbre, au-dessus de tout :
+## le changement de scène ne l'emporte pas et son image vide ne se voit pas.
+func _go_to_title() -> void:
+	close()
+	var cover := CanvasLayer.new()
+	cover.layer = 100
+	cover.process_mode = Node.PROCESS_MODE_ALWAYS
+	cover.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	var veil := ColorRect.new()
+	veil.color = Color(Muses.NUIT, 0.0)
+	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	cover.add_child(veil)
+	get_tree().root.add_child(cover)
+
+	var tween := cover.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(veil, ^"color:a", 1.0, 0.35)
+	await tween.finished
+	# Fond « nuit » tant qu'on est hors du jeu (l'écran titre le rétablit en
+	# repartant vers une partie).
+	RenderingServer.set_default_clear_color(Muses.NUIT)
+	get_tree().paused = false
+	get_tree().change_scene_to_file(TITLE_SCENE)
+	while get_tree().current_scene == null or get_tree().current_scene.scene_file_path != TITLE_SCENE:
+		await get_tree().process_frame
+
+	tween = cover.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(veil, ^"color:a", 0.0, 0.3)
+	await tween.finished
+	cover.queue_free()
 
 
 # --- Personnage ----------------------------------------------------------
@@ -321,6 +459,9 @@ func _select_tab(tab: int) -> void:
 	_refresh_character()
 	_update_hint(_character)
 	_focus_default(_character)
+	Motion.fade_in(_pages[_tab], 0.18)
+	if _tab == Tab.ITEMS:
+		_cascade_slots()
 
 
 func _refresh_character() -> void:
@@ -348,6 +489,12 @@ func _set_filter(filter: int) -> void:
 	_refresh_items()
 	_update_hint(_character)
 	_focus_default(_pages[Tab.ITEMS])
+	_cascade_slots()
+
+
+## Les cases de l'inventaire se posent une à une, en vague rapide.
+func _cascade_slots() -> void:
+	Motion.cascade(_inv_grid.get_children(), Vector2(0, 8), 0.012, 0.2)
 
 
 ## Les objets de l'onglet : tout sauf les pièces du revolver (elles ont leur
@@ -384,6 +531,7 @@ func _refresh_items() -> void:
 
 func _make_item_slot(item: ItemData) -> Button:
 	var slot := Button.new()
+	slot.theme_type_variation = &"EmplacementVide" if item == null else &"Emplacement"
 	slot.custom_minimum_size = Vector2(inventory_slot_size, inventory_slot_size)
 	slot.focus_mode = Control.FOCUS_ALL
 	slot.expand_icon = true
@@ -397,32 +545,35 @@ func _make_item_slot(item: ItemData) -> Button:
 	slot.tooltip_text = item.display_name
 	var amount := Inventory.count(item.id)
 	if amount > 1:
-		var badge := Label.new()
-		badge.text = "×%d" % amount
-		badge.add_theme_font_size_override(&"font_size", small_size)
-		badge.add_theme_color_override(&"font_outline_color", Color.BLACK)
-		badge.add_theme_constant_override(&"outline_size", 4)
-		badge.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 4)
-		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# La quantité, en bas à droite du fond de la case.
+		var badge := _label(str(amount), &"Quantite")
+		badge.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+		badge.position -= Vector2(Muses.TRAIT + 6, Muses.TRAIT + 4)
 		slot.add_child(badge)
 	return slot
 
 
 func _show_item(item: ItemData) -> void:
-	if item == null:
+	# Sans objet, seule une phrase reste : centrée dans la colonne, sans la
+	# place vide de l'icône et des étiquettes au-dessus d'elle.
+	var empty := item == null
+	for part: Control in [_inv_icon, _inv_category, _inv_name, _inv_count]:
+		part.visible = not empty
+	_inv_detail.alignment = BoxContainer.ALIGNMENT_CENTER if empty else BoxContainer.ALIGNMENT_BEGIN
+	_inv_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if empty else HORIZONTAL_ALIGNMENT_LEFT
+	if empty:
 		_inv_icon.texture = null
 		if not _shown_items().is_empty():
-			_inv_name.text = "—"
+			_inv_desc.text = ""
 		elif _filter < 0:
-			_inv_name.text = "Ton sac est vide."
+			_inv_desc.text = "Ton sac est vide."
 		else:
-			_inv_name.text = "Rien dans cette catégorie."
-		_inv_count.text = ""
-		_inv_desc.text = ""
+			_inv_desc.text = "Rien dans cette catégorie."
 		return
 	_inv_icon.texture = item.icon
+	_inv_category.text = ItemData.CATEGORY_NAMES[item.category]
 	_inv_name.text = item.display_name
-	_inv_count.text = "%s · Possédé : %d" % [ItemData.CATEGORY_NAMES[item.category], Inventory.count(item.id)]
+	_inv_count.text = "Possédé : %d" % Inventory.count(item.id)
 	_inv_desc.text = item.description
 
 
@@ -431,7 +582,7 @@ func _show_item(item: ItemData) -> void:
 func _refresh_equipment() -> void:
 	for slot in _eq_slot_buttons:
 		var part := Equipment.get_part(slot)
-		_eq_slot_buttons[slot].text = "%s : %s" % [WeaponPartData.SLOT_NAMES[slot], part.display_name if part != null else "—"]
+		_eq_slot_buttons[slot].text = ("%s : %s" % [WeaponPartData.SLOT_NAMES[slot], part.display_name if part != null else "—"]).to_upper()
 	var stats := Equipment.stats_text()
 	if stats == "":
 		_eq_totals.text = "Aucune pièce montée : le revolver est d'origine."
@@ -448,12 +599,12 @@ func _show_slot(slot: int) -> void:
 
 	var parts := Equipment.get_owned_parts(slot)
 	if parts.is_empty():
-		_eq_parts.add_child(_label("Aucune pièce de ce type pour l'instant.", small_size, dim_text_color))
+		_eq_parts.add_child(_label("Aucune pièce de ce type pour l'instant.", &"Legende"))
 	for part in parts:
-		var button := Button.new()
-		button.text = part.display_name
+		var label := part.display_name
 		if Equipment.is_equipped(part.id):
-			button.text += "  · montée"
+			label += "  · montée"
+		var button := _button(label)
 		button.icon = part.icon
 		button.add_theme_constant_override(&"icon_max_width", 32)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -512,8 +663,7 @@ func _refresh_skills() -> void:
 	var owned := Skills.get_owned_skills()
 	_sk_count.text = "%d / %d compétences" % [owned.size(), Skills.total_count()]
 	for skill in owned:
-		var button := Button.new()
-		button.text = skill.display_name
+		var button := _button(skill.display_name)
 		button.icon = skill.icon
 		button.add_theme_constant_override(&"icon_max_width", 32)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -565,7 +715,7 @@ func _refresh_slots() -> void:
 
 
 func _make_save_slot(slot: int, info: Dictionary) -> Button:
-	var button := Button.new()
+	var button := _button("")
 	button.custom_minimum_size = Vector2(0, 92)
 	button.focus_mode = Control.FOCUS_ALL
 	button.mouse_entered.connect(button.grab_focus)
@@ -591,23 +741,26 @@ func _make_save_slot(slot: int, info: Dictionary) -> Button:
 	row.add_child(lines)
 
 	var title := "Sauvegarde automatique" if slot == SaveGame.AUTOSAVE_SLOT else "Emplacement %d" % slot
-	lines.add_child(_label(title, text_size, accent_color))
+	lines.add_child(_label(title, &"NomObjet"))
 
 	var usable := false
 	if not info.exists:
-		lines.add_child(_label("Vide", small_size, dim_text_color))
+		lines.add_child(_label("Vide", &"Legende"))
 	elif info.corrupted:
-		lines.add_child(_label("Fichier abîmé, illisible", small_size, Color(1, 0.5, 0.45)))
+		var broken := _label("Fichier abîmé, illisible", &"Legende")
+		# Pas de rouge dans la DA : le cuivre signale le problème.
+		broken.add_theme_color_override(&"font_color", Muses.CUIVRE)
+		lines.add_child(broken)
 	else:
 		usable = true
-		var place := _label("%s · %s" % [info.location, SaveGameScript.format_playtime(info.playtime)], small_size, text_color)
+		var place := _label("%s · %s" % [info.location, SaveGameScript.format_playtime(info.playtime)])
 		# Un nom de lieu trop long est coupé plutôt que d'élargir la fenêtre.
 		place.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		lines.add_child(place)
 		var date := SaveGameScript.format_date(info.saved_at)
 		if info.from_backup:
 			date += "  (copie de secours)"
-		lines.add_child(_label(date, small_size, dim_text_color))
+		lines.add_child(_label(date, &"HudEtiquette"))
 
 	if _slots_save_mode:
 		button.pressed.connect(_on_save_slot_pressed.bind(slot, info.exists))
@@ -634,34 +787,62 @@ func _save_to(slot: int) -> void:
 
 
 func _on_load_slot_pressed(slot: int) -> void:
+	# Depuis l'écran titre, pas de partie à perdre : on rend le choix tout de suite.
+	if _pick_slot.is_valid():
+		var pick := _pick_slot
+		close()
+		pick.call(slot)
+		return
 	_ask("Charger cette partie ?\nLa progression non sauvegardée sera perdue.", _load_from.bind(slot))
 
 
 func _load_from(slot: int) -> void:
 	close()
 	if await SaveGame.load_slot(slot):
-		_show_toast("Partie chargée")
+		_notify("Chargement", "Partie chargée")
 
 
 func _on_saved(slot: int) -> void:
-	_show_toast("Sauvegarde automatique" if slot == SaveGame.AUTOSAVE_SLOT else "Partie sauvegardée")
+	_notify("Sauvegarde", "Sauvegarde automatique" if slot == SaveGame.AUTOSAVE_SLOT else "Partie sauvegardée")
 
 
 func _on_save_failed(_slot: int, message: String) -> void:
-	_show_toast(message, Color(1, 0.5, 0.45))
+	_notify("Échec", message, true)
+
+
+# --- Notifications --------------------------------------------------------
+
+## Annonce en haut de l'écran (DA « Notification ») : une catégorie, un texte.
+## Une seule à la fois ; les suivantes attendent leur tour. `problem` passe la
+## catégorie en cuivre, la DA n'ayant pas de rouge.
+func _notify(category: String, text: String, problem: bool = false) -> void:
+	_notice_queue.append([category, text, problem])
+	if _notice_tween == null or not _notice_tween.is_valid():
+		_show_next_notice()
+
+
+func _show_next_notice() -> void:
+	if _notice_queue.is_empty():
+		return
+	var entry: Array = _notice_queue.pop_front()
+	_notice_category.text = entry[0]
+	_notice_category.add_theme_color_override(&"font_color", Muses.CUIVRE if entry[2] else Muses.SEVE)
+	_notice_text.text = entry[1]
+	# Le bandeau descend en apparaissant, puis remonte en s'effaçant.
+	var rest := float(Muses.ESPACE_4)
+	_notice.position.y = rest - 20.0
+	_notice_tween = create_tween()
+	_notice_tween.tween_property(_notice, ^"modulate:a", 1.0, 0.2)
+	_notice_tween.parallel().tween_property(_notice, ^"position:y", rest, 0.35) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_notice_tween.tween_interval(notice_time)
+	_notice_tween.tween_property(_notice, ^"modulate:a", 0.0, 0.3)
+	_notice_tween.parallel().tween_property(_notice, ^"position:y", rest - 12.0, 0.3) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_notice_tween.tween_callback(_show_next_notice)
 
 
 # --- Petits outils --------------------------------------------------------
-
-func _show_toast(message: String, color: Color = accent_color) -> void:
-	_toast.text = message
-	_toast.add_theme_color_override(&"font_color", color)
-	if _toast_tween != null and _toast_tween.is_valid():
-		_toast_tween.kill()
-	_toast.modulate.a = 1.0
-	_toast_tween = create_tween()
-	_toast_tween.tween_interval(1.6)
-	_toast_tween.tween_property(_toast, ^"modulate:a", 0.0, 0.5)
 
 
 func _update_hint(window: Control) -> void:
@@ -676,7 +857,7 @@ func _update_hint(window: Control) -> void:
 	parts.append("%s : valider" % _key(&"ui_accept"))
 	parts.append("%s : retour" % _key(&"menu_back"))
 	parts.append("%s : fermer" % _key(&"menu"))
-	hint.text = "     ".join(parts)
+	hint.text = "   ".join(parts)
 
 	if window == _character:
 		_tab_prev_key.text = "‹ " + _key(&"menu_tab_prev")
@@ -691,6 +872,10 @@ func _connect_input_device() -> void:
 	var device := get_node_or_null(^"/root/InputDevice")
 	if device != null:
 		device.connect(&"changed", _on_input_device_changed)
+	# F11 change aussi le plein écran : l'interrupteur des paramètres suit.
+	var settings := get_node_or_null(^"/root/Settings")
+	if settings != null:
+		settings.connect(&"fullscreen_changed", _fullscreen.set_pressed_no_signal)
 
 
 func _on_input_device_changed(_gamepad_connected: bool) -> void:
@@ -725,21 +910,42 @@ static func _clear(container: Node) -> void:
 
 ## Texte sur plusieurs lignes, coupé au-delà de `max_lines` pour ne jamais
 ## agrandir la fenêtre.
-func _wrapped_label(size: int, color: Color, max_lines: int) -> Label:
-	var label := _label("", size, color)
+func _wrapped_label(style: StringName, max_lines: int) -> Label:
+	var label := _label("", style)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.max_lines_visible = max_lines
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	return label
 
 
-func _label(text: String, size: int, color: Color) -> Label:
+## Un texte dans un des styles du thème (vide = le récit). Tous sont en
+## capitales, sauf ceux qui se lisent : le récit et la légende.
+func _label(text: String, style: StringName = &"") -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_size_override(&"font_size", size)
-	label.add_theme_color_override(&"font_color", color)
+	label.theme_type_variation = style
+	label.uppercase = style not in [&"", &"Legende"]
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
+
+
+## Un bouton de la DA, libellé en capitales. `style` vide = le bouton
+## principal, un seul par fenêtre.
+func _button(text: String, style: StringName = &"BoutonSecondaire") -> Button:
+	var button := Button.new()
+	button.text = text.to_upper()
+	button.theme_type_variation = style
+	button.custom_minimum_size.y = Muses.CIBLE_MIN
+	return button
+
+
+## Le séparateur sous l'en-tête d'un panneau, en retrait des bords.
+static func _make_circuit() -> Control:
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override(&"margin_left", Muses.ESPACE_3)
+	margin.add_theme_constant_override(&"margin_right", Muses.ESPACE_3)
+	margin.add_child(Circuit.new())
+	return margin
 
 
 # --- Construction de l'interface ------------------------------------------
@@ -747,11 +953,11 @@ func _label(text: String, size: int, color: Color) -> Label:
 func _build() -> void:
 	_root = Control.new()
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_root.theme = _make_theme()
 	add_child(_root)
 
+	# Un seul panneau au premier plan : le jeu derrière s'assombrit.
 	var backdrop := ColorRect.new()
-	backdrop.color = backdrop_color
+	backdrop.color = Muses.VOILE
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(backdrop)
 
@@ -759,22 +965,15 @@ func _build() -> void:
 	_character = _build_character()
 	_slots = _build_slots()
 	_confirm = _build_confirm()
-
-	_toast = Label.new()
-	_toast.add_theme_font_size_override(&"font_size", text_size)
-	_toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
-	_toast.add_theme_constant_override(&"outline_size", 6)
-	_toast.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 24)
-	_toast.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_toast.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_toast.modulate.a = 0.0
-	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Hors de _root : les messages restent visibles une fois le menu fermé.
-	add_child(_toast)
+	_settings = _build_settings()
+	# Hors de _root : les notifications restent visibles une fois le menu fermé.
+	_notice = _build_notice()
+	add_child(_notice)
 
 
-## Une fenêtre centrée : titre, contenu, rappel des touches. Renvoie le
-## conteneur à remplir ; la fenêtre elle-même est son ancêtre dans _root.
+## Une fenêtre centrée (DA « Panneau ») : en-tête bordeaux, circuit, contenu,
+## rappel des touches. Renvoie la fenêtre (son ancêtre dans _root), le
+## conteneur à remplir et le titre.
 func _make_window(title: String) -> Array:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -782,23 +981,37 @@ func _make_window(title: String) -> Array:
 
 	# Taille fixe : la fenêtre ne change pas de taille d'un écran à l'autre.
 	var panel := PanelContainer.new()
+	panel.theme_type_variation = &"PanneauEntete"
 	panel.custom_minimum_size = window_size
 	center.add_child(panel)
 
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override(&"separation", 16)
-	panel.add_child(column)
+	var frame := VBoxContainer.new()
+	frame.add_theme_constant_override(&"separation", 0)
+	panel.add_child(frame)
 
-	var title_label := _label(title, title_size, accent_color)
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(title_label)
+	var header := PanelContainer.new()
+	header.theme_type_variation = &"Entete"
+	frame.add_child(header)
+	var title_label := _label(title, &"TitrePanneau")
+	header.add_child(title_label)
+	frame.add_child(_make_circuit())
+
+	var content := MarginContainer.new()
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side in [&"margin_left", &"margin_top", &"margin_right", &"margin_bottom"]:
+		content.add_theme_constant_override(side, Muses.ESPACE_3)
+	frame.add_child(content)
+
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override(&"separation", Muses.ESPACE_2)
+	content.add_child(column)
 
 	var body := VBoxContainer.new()
-	body.add_theme_constant_override(&"separation", 10)
+	body.add_theme_constant_override(&"separation", 12)
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(body)
 
-	var hint := _label("", small_size, dim_text_color)
+	var hint := _label("", &"HudEtiquette")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	# Un rappel trop long est coupé plutôt que d'élargir la fenêtre.
 	hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -826,42 +1039,42 @@ func _build_main() -> Control:
 		["Personnage", func() -> void: _push(_character)],
 		["Sauvegarder", _open_slots.bind(true)],
 		["Charger", _open_slots.bind(false)],
-		["Quitter le jeu", _on_quit],
+		["Paramètres", func() -> void: _push(_settings)],
+		["Écran titre", _on_title_screen],
 	]:
-		var button := Button.new()
-		button.text = entry[0]
-		button.custom_minimum_size = Vector2(320, 0)
+		# « Reprendre », l'action attendue, est le seul bouton principal.
+		var button := _button(entry[0], &"" if body.get_child_count() == 0 else &"BoutonSecondaire")
+		button.custom_minimum_size.x = 320
 		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		button.pressed.connect(entry[1])
 		button.mouse_entered.connect(button.grab_focus)
 		body.add_child(button)
+		_main_buttons.append(button)
 	return parts[0]
 
 
 func _build_character() -> Control:
 	var parts := _make_window("Personnage")
 	var body: VBoxContainer = parts[1]
-	# Les onglets font office de titre.
-	(parts[2] as Label).visible = false
 
 	var bar := HBoxContainer.new()
 	bar.alignment = BoxContainer.ALIGNMENT_CENTER
-	bar.add_theme_constant_override(&"separation", 12)
+	bar.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	body.add_child(bar)
-	_tab_prev_key = _label("", small_size, dim_text_color)
+	_tab_prev_key = _label("", &"HudEtiquette")
 	bar.add_child(_tab_prev_key)
 	for i in TAB_NAMES.size():
-		var tab := Button.new()
-		tab.text = TAB_NAMES[i]
+		# L'onglet choisi prend la face bordeaux de l'appui.
+		var tab := _button(TAB_NAMES[i])
 		tab.toggle_mode = true
 		# Pas de sélection à la croix : on change d'onglet avec menu_tab_*,
 		# la croix reste au contenu de l'onglet.
 		tab.focus_mode = Control.FOCUS_NONE
-		tab.custom_minimum_size = Vector2(200, 0)
+		tab.custom_minimum_size.x = 170
 		tab.pressed.connect(_select_tab.bind(i))
 		bar.add_child(tab)
 		_tab_buttons.append(tab)
-	_tab_next_key = _label("", small_size, dim_text_color)
+	_tab_next_key = _label("", &"HudEtiquette")
 	bar.add_child(_tab_next_key)
 
 	_pages.append(_build_items_page())
@@ -881,44 +1094,46 @@ func _build_items_page() -> Control:
 	filters.alignment = BoxContainer.ALIGNMENT_CENTER
 	filters.add_theme_constant_override(&"separation", 6)
 	page.add_child(filters)
-	_filter_prev_key = _label("", small_size, dim_text_color)
+	_filter_prev_key = _label("", &"HudEtiquette")
 	filters.add_child(_filter_prev_key)
 	var names: PackedStringArray = ["Tout"]
 	names.append_array(ItemData.CATEGORY_NAMES)
 	for i in names.size():
-		var filter := Button.new()
-		filter.text = names[i]
+		var filter := _button(names[i], &"Filtre")
 		filter.toggle_mode = true
 		filter.focus_mode = Control.FOCUS_NONE
-		filter.add_theme_font_size_override(&"font_size", small_size)
 		filter.pressed.connect(_set_filter.bind(i - 1))
 		filters.add_child(filter)
 		_filter_buttons.append(filter)
-	_filter_next_key = _label("", small_size, dim_text_color)
+	_filter_next_key = _label("", &"HudEtiquette")
 	filters.add_child(_filter_next_key)
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override(&"separation", 24)
+	row.add_theme_constant_override(&"separation", Muses.ESPACE_3)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_child(row)
 
 	# Beaucoup d'objets : la grille défile, la fenêtre ne grandit pas.
 	var scroll := _make_scroll()
-	scroll.custom_minimum_size.x = inventory_columns * inventory_slot_size + (inventory_columns - 1) * 6 + 12
+	scroll.custom_minimum_size.x = inventory_columns * inventory_slot_size + (inventory_columns - 1) * Muses.ESPACE_1 \
+			+ Motion.ROOM * 2 + Motion.SCROLLBAR_GAP + 8
 	row.add_child(scroll)
 
 	_inv_grid = GridContainer.new()
 	_inv_grid.columns = inventory_columns
-	_inv_grid.add_theme_constant_override(&"h_separation", 6)
-	_inv_grid.add_theme_constant_override(&"v_separation", 6)
+	_inv_grid.add_theme_constant_override(&"h_separation", Muses.ESPACE_1)
+	_inv_grid.add_theme_constant_override(&"v_separation", Muses.ESPACE_1)
 	# Icônes en pixel art : pas de flou à l'agrandissement.
 	_inv_grid.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	scroll.add_child(_inv_grid)
+	scroll.add_child(Motion.with_room(_inv_grid))
 
+	# La fiche de l'objet sélectionné, comme une infobulle : catégorie, nom,
+	# description.
 	var detail := VBoxContainer.new()
-	detail.custom_minimum_size = Vector2(280, 0)
-	detail.add_theme_constant_override(&"separation", 8)
+	_inv_detail = detail
+	detail.custom_minimum_size = Vector2(264, 0)
+	detail.add_theme_constant_override(&"separation", 4)
 	row.add_child(detail)
 
 	_inv_icon = TextureRect.new()
@@ -928,27 +1143,29 @@ func _build_items_page() -> Control:
 	_inv_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	detail.add_child(_inv_icon)
 
-	_inv_name = _label("", text_size, accent_color)
+	_inv_category = _label("", &"Categorie")
+	detail.add_child(_inv_category)
+	_inv_name = _label("", &"TitrePanneau")
 	detail.add_child(_inv_name)
-	_inv_count = _label("", small_size, dim_text_color)
+	_inv_count = _label("", &"HudEtiquette")
 	detail.add_child(_inv_count)
-	_inv_desc = _wrapped_label(small_size, text_color, 8)
-	_inv_desc.custom_minimum_size = Vector2(280, 0)
+	_inv_desc = _wrapped_label(&"Legende", 8)
+	_inv_desc.custom_minimum_size = Vector2(264, 0)
 	detail.add_child(_inv_desc)
 	return page
 
 
 func _build_equipment_page() -> Control:
 	var page := HBoxContainer.new()
-	page.add_theme_constant_override(&"separation", 32)
+	page.add_theme_constant_override(&"separation", Muses.ESPACE_3)
 
 	var left := VBoxContainer.new()
 	left.custom_minimum_size = Vector2(320, 0)
-	left.add_theme_constant_override(&"separation", 8)
+	left.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	page.add_child(left)
-	left.add_child(_label("Revolver", text_size, accent_color))
+	left.add_child(_label("Revolver", &"SousTitre"))
 	for slot in WeaponPartData.Slot.values():
-		var button := Button.new()
+		var button := _button("")
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		button.focus_entered.connect(_show_slot.bind(slot))
@@ -956,54 +1173,55 @@ func _build_equipment_page() -> Control:
 		button.pressed.connect(_focus_parts)
 		left.add_child(button)
 		_eq_slot_buttons[slot] = button
-	_eq_totals = _wrapped_label(small_size, text_color, 5)
+	_eq_totals = _wrapped_label(&"Legende", 5)
 	left.add_child(_eq_totals)
 
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override(&"separation", 8)
+	right.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	page.add_child(right)
-	_eq_parts_title = _label("", text_size, accent_color)
+	_eq_parts_title = _label("", &"SousTitre")
 	right.add_child(_eq_parts_title)
 	var scroll := _make_scroll()
 	right.add_child(scroll)
 	_eq_parts = VBoxContainer.new()
 	_eq_parts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_eq_parts.add_theme_constant_override(&"separation", 6)
-	scroll.add_child(_eq_parts)
+	scroll.add_child(Motion.with_room(_eq_parts))
 
-	_eq_name = _label("", text_size, accent_color)
+	_eq_name = _label("", &"TitrePanneau")
 	right.add_child(_eq_name)
-	_eq_desc = _wrapped_label(small_size, text_color, 3)
+	_eq_desc = _wrapped_label(&"Legende", 3)
 	right.add_child(_eq_desc)
-	_eq_stats = _label("", small_size, accent_color)
+	# Les bonus sont des valeurs importantes : en sève.
+	_eq_stats = _label("", &"Categorie")
 	_eq_stats.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	right.add_child(_eq_stats)
-	_eq_action = _label("", small_size, dim_text_color)
+	_eq_action = _label("", &"HudEtiquette")
 	right.add_child(_eq_action)
 	return page
 
 
 func _build_skills_page() -> Control:
 	var page := HBoxContainer.new()
-	page.add_theme_constant_override(&"separation", 32)
+	page.add_theme_constant_override(&"separation", Muses.ESPACE_3)
 
 	var left := VBoxContainer.new()
 	left.custom_minimum_size = Vector2(320, 0)
-	left.add_theme_constant_override(&"separation", 8)
+	left.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	page.add_child(left)
-	_sk_count = _label("", small_size, dim_text_color)
+	_sk_count = _label("", &"HudEtiquette")
 	left.add_child(_sk_count)
 	var scroll := _make_scroll()
 	left.add_child(scroll)
 	_sk_list = VBoxContainer.new()
 	_sk_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sk_list.add_theme_constant_override(&"separation", 6)
-	scroll.add_child(_sk_list)
+	scroll.add_child(Motion.with_room(_sk_list))
 
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_theme_constant_override(&"separation", 8)
+	right.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	page.add_child(right)
 	_sk_icon = TextureRect.new()
 	_sk_icon.custom_minimum_size = Vector2(96, 96)
@@ -1011,11 +1229,11 @@ func _build_skills_page() -> Control:
 	_sk_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_sk_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	right.add_child(_sk_icon)
-	_sk_name = _label("", title_size, accent_color)
+	_sk_name = _label("", &"TitrePanneau")
 	right.add_child(_sk_name)
-	_sk_input = _label("", text_size, text_color)
+	_sk_input = _label("", &"Categorie")
 	right.add_child(_sk_input)
-	_sk_desc = _wrapped_label(small_size, text_color, 8)
+	_sk_desc = _wrapped_label(&"Legende", 8)
 	right.add_child(_sk_desc)
 	return page
 
@@ -1026,73 +1244,119 @@ func _build_slots() -> Control:
 	var scroll := _make_scroll()
 	(parts[1] as VBoxContainer).add_child(scroll)
 	_slots_list = VBoxContainer.new()
-	_slots_list.add_theme_constant_override(&"separation", 8)
+	_slots_list.add_theme_constant_override(&"separation", Muses.ESPACE_1)
 	_slots_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_slots_list)
+	scroll.add_child(Motion.with_room(_slots_list))
 	return parts[0]
+
+
+## Plein écran, volume, et le bouton qui ouvre les touches : les mêmes
+## réglages que les paramètres de l'écran titre.
+func _build_settings() -> Control:
+	var parts := _make_window("Paramètres")
+	var body: VBoxContainer = parts[1]
+	body.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var column := VBoxContainer.new()
+	column.custom_minimum_size.x = Muses.PANNEAU_MIN
+	column.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_theme_constant_override(&"separation", Muses.ESPACE_2)
+	body.add_child(column)
+
+	_fullscreen = CheckButton.new()
+	_fullscreen.text = "Plein écran".to_upper()
+	_fullscreen.custom_minimum_size.y = Muses.CIBLE_MIN
+	# Settings est chargé après ce menu : on ne le nomme qu'au moment d'agir.
+	_fullscreen.toggled.connect(func(on: bool) -> void: Settings.set_fullscreen(on))
+	column.add_child(_fullscreen)
+
+	var volume_row := HBoxContainer.new()
+	volume_row.add_theme_constant_override(&"separation", Muses.ESPACE_2)
+	column.add_child(volume_row)
+	volume_row.add_child(_label("Volume", &"HudEtiquette"))
+	_volume = HSlider.new()
+	_volume.max_value = 1.0
+	_volume.step = 0.05
+	_volume.custom_minimum_size.y = Muses.CIBLE_MIN
+	_volume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_volume.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_volume.value_changed.connect(func(value: float) -> void: Settings.set_master_volume(value))
+	volume_row.add_child(_volume)
+
+	var controls := _button("Touches")
+	controls.pressed.connect(_open_controls)
+	controls.mouse_entered.connect(controls.grab_focus)
+	column.add_child(controls)
+	return parts[0]
+
+
+## La fenêtre des touches : le panneau de l'écran titre, dans une fenêtre
+## centrée comme les autres. Son bouton Retour revient aux paramètres.
+func _open_controls() -> void:
+	if _controls == null:
+		var center := CenterContainer.new()
+		center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_root.add_child(center)
+		var panel: Control = ControlsPanelScript.new()
+		panel.custom_minimum_size = window_size
+		panel.connect(&"closed", back)
+		center.add_child(panel)
+		_controls = center
+	_push(_controls)
 
 
 func _build_confirm() -> Control:
 	var parts := _make_window("Confirmation")
 	var body: VBoxContainer = parts[1]
 	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	body.add_theme_constant_override(&"separation", Muses.ESPACE_3)
 
-	_confirm_label = _label("", text_size, text_color)
+	_confirm_label = _label("")
 	_confirm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(_confirm_label)
 
+	# Les actions sont centrées sous le message, la principale en dernier.
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override(&"separation", 16)
+	row.add_theme_constant_override(&"separation", Muses.ESPACE_2)
 	body.add_child(row)
 
-	_confirm_yes = Button.new()
-	_confirm_yes.text = "Oui"
-	_confirm_yes.custom_minimum_size = Vector2(140, 0)
-	_confirm_yes.pressed.connect(_on_confirm_yes)
-	_confirm_yes.mouse_entered.connect(_confirm_yes.grab_focus)
-	row.add_child(_confirm_yes)
-
-	_confirm_no = Button.new()
-	_confirm_no.text = "Non"
-	_confirm_no.custom_minimum_size = Vector2(140, 0)
+	_confirm_no = _button("Non")
+	_confirm_no.custom_minimum_size.x = 140
 	_confirm_no.pressed.connect(back)
 	_confirm_no.mouse_entered.connect(_confirm_no.grab_focus)
 	row.add_child(_confirm_no)
+
+	_confirm_yes = _button("Oui", &"")
+	_confirm_yes.custom_minimum_size.x = 140
+	_confirm_yes.pressed.connect(_on_confirm_yes)
+	_confirm_yes.mouse_entered.connect(_confirm_yes.grab_focus)
+	row.add_child(_confirm_yes)
 	return parts[0]
 
 
-func _make_theme() -> Theme:
-	var theme := Theme.new()
-	theme.set_stylebox(&"panel", &"PanelContainer", _box(panel_color, accent_color.darkened(0.3), 2, 12, 24))
+## Le bandeau des notifications, en haut au centre de l'écran.
+func _build_notice() -> Control:
+	var area := VBoxContainer.new()
+	area.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	area.offset_top = Muses.ESPACE_4
+	area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	area.modulate.a = 0.0
 
-	theme.set_stylebox(&"normal", &"Button", _box(button_color, Color.TRANSPARENT, 0, 8, 10))
-	theme.set_stylebox(&"hover", &"Button", _box(button_color.lightened(0.1), Color.TRANSPARENT, 0, 8, 10))
-	theme.set_stylebox(&"pressed", &"Button", _box(accent_color.darkened(0.6), Color.TRANSPARENT, 0, 8, 10))
-	# Onglet ou filtre choisi, sous la souris.
-	theme.set_stylebox(&"hover_pressed", &"Button", _box(accent_color.darkened(0.5), Color.TRANSPARENT, 0, 8, 10))
-	theme.set_stylebox(&"disabled", &"Button", _box(Color(1, 1, 1, 0.02), Color.TRANSPARENT, 0, 8, 10))
-	# Dessinée par-dessus les autres : le cadre doré montre la sélection,
-	# indispensable à la manette.
-	theme.set_stylebox(&"focus", &"Button", _box(Color.TRANSPARENT, accent_color, 3, 8, 10))
+	var panel := PanelContainer.new()
+	panel.theme_type_variation = &"Notification"
+	# Largeur maximale de la DA : 420 px.
+	panel.custom_minimum_size.x = 420
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	area.add_child(panel)
 
-	theme.set_font_size(&"font_size", &"Button", text_size)
-	theme.set_color(&"font_color", &"Button", text_color)
-	theme.set_color(&"font_hover_color", &"Button", accent_color)
-	theme.set_color(&"font_focus_color", &"Button", accent_color)
-	theme.set_color(&"font_pressed_color", &"Button", accent_color)
-	theme.set_color(&"font_hover_pressed_color", &"Button", accent_color)
-	theme.set_color(&"font_disabled_color", &"Button", dim_text_color.darkened(0.3))
-	theme.set_font_size(&"font_size", &"Label", text_size)
-	theme.set_color(&"font_color", &"Label", text_color)
-	return theme
-
-
-static func _box(bg: Color, border: Color, border_width: int, radius: int, margin: int) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = bg
-	box.border_color = border
-	box.set_border_width_all(border_width)
-	box.set_corner_radius_all(radius)
-	box.set_content_margin_all(margin)
-	return box
+	var lines := VBoxContainer.new()
+	lines.add_theme_constant_override(&"separation", 2)
+	panel.add_child(lines)
+	_notice_category = _label("", &"Categorie")
+	lines.add_child(_notice_category)
+	_notice_text = _label("", &"TitrePanneau")
+	_notice_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lines.add_child(_notice_text)
+	return area
