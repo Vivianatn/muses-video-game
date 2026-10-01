@@ -40,6 +40,8 @@ static func head_of(sprite: Node2D) -> Vector2:
 		drawn = still.get_rect()
 		region = Rect2i(still.region_rect) if still.region_enabled else Rect2i(Vector2i.ZERO, Vector2i(texture.get_size()))
 		if still.hframes > 1 or still.vframes > 1:
+			# Division entière voulue : une frame fait un nombre entier de pixels.
+			@warning_ignore("integer_division")
 			var frame_size := region.size / Vector2i(still.hframes, still.vframes)
 			region = Rect2i(region.position + frame_size * still.frame_coords, frame_size)
 		flip = still.flip_h

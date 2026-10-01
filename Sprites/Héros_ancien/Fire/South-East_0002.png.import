@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnn108m0i8n7r"
-path="res://.godot/imported/South-East_0002.png-a6fd0a3c8476c2d9582e09a7b85ba970.ctex"
+path="res://.godot/imported/South-East_0002.png-213c09dae33972b5d70faaf06f3d0526.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Héros/Fire/South-East_0002.png"
-dest_files=["res://.godot/imported/South-East_0002.png-a6fd0a3c8476c2d9582e09a7b85ba970.ctex"]
+source_file="res://Sprites/Héros_ancien/Fire/South-East_0002.png"
+dest_files=["res://.godot/imported/South-East_0002.png-213c09dae33972b5d70faaf06f3d0526.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mp4ygg108mwo"
-path="res://.godot/imported/Walk.png-b2f9136a14b233f7e9d8e34e2d041514.ctex"
+uid="uid://bow3fegjd1eo3"
+path="res://.godot/imported/South-East_0001.png-90f02d5dc7063650be481d6162116925.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Héros/Walk/Walk.png"
-dest_files=["res://.godot/imported/Walk.png-b2f9136a14b233f7e9d8e34e2d041514.ctex"]
+source_file="res://Sprites/Héros_ancien/Fire/South-East_0001.png"
+dest_files=["res://.godot/imported/South-East_0001.png-90f02d5dc7063650be481d6162116925.ctex"]
 
 [params]
 

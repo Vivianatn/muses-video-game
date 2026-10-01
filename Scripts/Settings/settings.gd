@@ -219,22 +219,22 @@ static func _decode(data: Dictionary) -> InputEvent:
 		"key":
 			var key := InputEventKey.new()
 			if data.has("physical"):
-				key.physical_keycode = int(data.physical)
+				key.physical_keycode = int(data.physical) as Key
 			else:
-				key.keycode = int(data.get("keycode", KEY_NONE))
+				key.keycode = int(data.get("keycode", KEY_NONE)) as Key
 			return key
 		"button":
 			var button := InputEventJoypadButton.new()
-			button.button_index = int(data.get("index", 0))
+			button.button_index = int(data.get("index", 0)) as JoyButton
 			return button
 		"axis":
 			var motion := InputEventJoypadMotion.new()
-			motion.axis = int(data.get("axis", 0))
+			motion.axis = int(data.get("axis", 0)) as JoyAxis
 			motion.axis_value = float(data.get("value", 1.0))
 			return motion
 		"mouse":
 			var mouse := InputEventMouseButton.new()
-			mouse.button_index = int(data.get("index", MOUSE_BUTTON_LEFT))
+			mouse.button_index = int(data.get("index", MOUSE_BUTTON_LEFT)) as MouseButton
 			return mouse
 	return null
 

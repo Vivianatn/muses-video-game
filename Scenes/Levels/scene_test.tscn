@@ -19,7 +19,7 @@ tile_map_data = PackedByteArray("AAAIAA0AAAABAAEAAAAJAA0AAAABAAEAAAAKAA0AAAABAAE
 tile_map_data = PackedByteArray("AAAMAAYAAAADAAIAAAANAAYAAAAEAAIAAAArAAEAAAADAAIAAAAsAAEAAAAEAAIAAAA=")
 
 [node name="player" parent="." unique_id=846981261 instance=ExtResource("1_pdl4h")]
-position = Vector2(2321, 418)
+position = Vector2(2321, 393)
 
 [node name="PNJs" type="Node2D" parent="." unique_id=1001142839]
 

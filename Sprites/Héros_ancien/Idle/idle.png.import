@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://38rgkaobase3"
-path="res://.godot/imported/South-East_0004.png-498d42721f3507dc20786835dc86a480.ctex"
+uid="uid://6xb1wyffqvur"
+path="res://.godot/imported/idle.png-cbe2c509310bb5dd2adf37bc8868a488.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Héros/Fire/South-East_0004.png"
-dest_files=["res://.godot/imported/South-East_0004.png-498d42721f3507dc20786835dc86a480.ctex"]
+source_file="res://Sprites/Héros_ancien/Idle/idle.png"
+dest_files=["res://.godot/imported/idle.png-cbe2c509310bb5dd2adf37bc8868a488.ctex"]
 
 [params]
 

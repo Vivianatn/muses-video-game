@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg role="img" aria-label="MUSES" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1840" height="524" viewBox="-50 -20 920 262">
+<defs>
+<filter id="lueur" filterUnits="userSpaceOnUse" x="-50" y="-20" width="920" height="262"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="halo" filterUnits="userSpaceOnUse" x="-50" y="-20" width="920" height="262"><feGaussianBlur stdDeviation="5"/></filter>
+<mask id="fissure" maskUnits="userSpaceOnUse" x="-50" y="-20" width="920" height="262"><rect x="-50" y="-20" width="920" height="262" fill="#fff"/><rect x="-50" y="108" width="910" height="4" fill="#000"/></mask>
+<linearGradient id="corps" x1="0" y1="30" x2="0" y2="190" gradientUnits="userSpaceOnUse">
+<stop offset="0" stop-color="#a8452f"></stop>
+<stop offset="0.5" stop-color="#8c2a33"></stop>
+<stop offset="1" stop-color="#6e1a2b"></stop>
+</linearGradient>
+<g id="lettres">
+<polygon points="0,42 12,30 34,30 85,104 136,30 158,30 170,42 170,190 146,190 146,78 92,150 78,150 24,78 24,190 0,190"></polygon>
+<polygon points="200,42 212,30 226,30 226,148 244,166 306,166 324,148 324,30 338,30 350,42 350,160 320,190 230,190 200,160"></polygon>
+<polygon points="400,30 510,30 510,54 412,54 406,60 406,90 412,96 490,96 510,116 510,170 490,190 380,190 380,166 478,166 484,160 484,126 478,120 400,120 380,100 380,50"></polygon>
+<polygon points="552,30 650,30 650,50 564,50 564,65 620,65 620,81 564,81 564,100 634,100 634,120 564,120 564,137 620,137 620,153 564,153 564,170 650,170 650,190 540,190 540,42"></polygon>
+<polygon points="700,30 810,30 810,54 712,54 706,60 706,90 712,96 790,96 810,116 810,170 790,190 680,190 680,166 778,166 784,160 784,126 778,120 700,120 680,100 680,50"></polygon>
+</g>
+<g id="fMousse">
+<path d="M0,0 C6,-9 18,-10 26,0 C18,10 6,9 0,0 Z" fill="#6b8f3c"></path>
+<path d="M0,0 C6,-9 18,-10 26,0 Z" fill="#4f6f2a"></path>
+<path d="M1,0 L24,0 M7,0 L11,-5 M13,0 L17,-5 M7,0 L11,5 M13,0 L17,5" fill="none" stroke="#a8d18d" stroke-width="0.8" stroke-linecap="round"></path>
+</g>
+<g id="fJade">
+<path d="M0,0 C6,-9 18,-10 26,0 C18,10 6,9 0,0 Z" fill="#3fa37a"></path>
+<path d="M0,0 C6,-9 18,-10 26,0 Z" fill="#2f7d5c"></path>
+<path d="M1,0 L24,0 M7,0 L11,-5 M13,0 L17,-5 M7,0 L11,5 M13,0 L17,5" fill="none" stroke="#a8d18d" stroke-width="0.8" stroke-linecap="round"></path>
+</g>
+<g id="fPale">
+<path d="M0,0 C6,-9 18,-10 26,0 C18,10 6,9 0,0 Z" fill="#a8d18d"></path>
+<path d="M0,0 C6,-9 18,-10 26,0 Z" fill="#7fb069"></path>
+<path d="M1,0 L24,0 M7,0 L11,-5 M13,0 L17,-5 M7,0 L11,5 M13,0 L17,5" fill="none" stroke="#2f5d3a" stroke-width="0.8" stroke-linecap="round"></path>
+</g>
+<g id="fougere">
+<path d="M0,0 L30,0" fill="none" stroke="#2f5d3a" stroke-width="1.5" stroke-linecap="round"></path>
+<path d="M5,0 C7,-5 10,-6 12,-6 M11,0 C13,-5 16,-6 18,-6 M17,0 C19,-4 21,-5 23,-5 M5,0 C7,5 10,6 12,6 M11,0 C13,5 16,6 18,6 M17,0 C19,4 21,5 23,5" fill="none" stroke="#6b8f3c" stroke-width="2" stroke-linecap="round"></path>
+</g>
+<g id="bourgeon">
+<circle cx="0" cy="0" r="4" fill="#8c2a33"></circle>
+<circle cx="-1.2" cy="-1.2" r="1.3" fill="#c8753a"></circle>
+</g>
+</defs>
+
+<g mask="url(#fissure)">
+<use href="#lettres" x="5" y="6" fill="#3a0d17"></use>
+<use href="#lettres" fill="url(#corps)" stroke="#c8753a" stroke-width="2.5" stroke-linejoin="miter"></use>
+</g>
+
+<line x1="-24" y1="110" x2="834" y2="110" stroke="#a8d18d" stroke-width="1.5"></line>
+<line x1="-24" y1="110" x2="834" y2="110" stroke="#a8d18d" stroke-width="4" filter="url(#halo)" opacity="0.4">
+<animate attributeName="opacity" values="0.25;0.7;0.25" dur="6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</line>
+<line x1="-24" y1="110" x2="834" y2="110" stroke="#f4ffe9" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="110 2000" stroke-dashoffset="110" filter="url(#lueur)">
+<animate attributeName="stroke-dashoffset" values="110;-870;-870" keyTimes="0;0.45;1" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0 0 1 1"/>
+</line>
+<circle cx="-24" cy="110" r="3.5" fill="#a8d18d" filter="url(#lueur)">
+<animate attributeName="r" values="3.5;7;3.5;3.5" keyTimes="0;0.04;0.14;1" dur="6s" repeatCount="indefinite"/>
+</circle>
+<circle cx="834" cy="110" r="3.5" fill="#a8d18d" filter="url(#lueur)">
+<animate attributeName="r" values="3.5;3.5;7;3.5;3.5" keyTimes="0;0.42;0.47;0.58;1" dur="6s" repeatCount="indefinite"/>
+</circle>
+
+<g fill="none" stroke="#a8d18d" stroke-width="5" stroke-linecap="square" filter="url(#halo)" opacity="0.3">
+<polyline points="12,178 12,122"></polyline>
+<polyline points="12,98 12,64"></polyline>
+<polyline points="158,178 158,122"></polyline>
+<polyline points="158,98 158,64"></polyline>
+<polyline points="213,62 213,98"></polyline>
+<polyline points="213,122 213,152 239,178 298,178"></polyline>
+<polyline points="498,42 400,42 393,49 393,98"></polyline>
+<polyline points="552,44 552,98"></polyline>
+<polyline points="552,122 552,178"></polyline>
+<polyline points="566,40 638,40"></polyline>
+<polyline points="566,73 608,73"></polyline>
+<polyline points="566,145 608,145"></polyline>
+<polyline points="566,180 638,180"></polyline>
+<polyline points="158,190 158,206 190,206"></polyline>
+<polyline points="260,190 260,204 300,204 300,212"></polyline>
+<polyline points="292,190 292,197 330,197"></polyline>
+<animate attributeName="opacity" values="0.25;0.25;0.9;0.25" keyTimes="0;0.33;0.55;1" dur="6s" repeatCount="indefinite"/></g>
+<g fill="none" stroke="#a8d18d" stroke-width="2" stroke-linecap="square">
+<polyline points="12,178 12,122"></polyline>
+<polyline points="12,98 12,64"></polyline>
+<polyline points="158,178 158,122"></polyline>
+<polyline points="158,98 158,64"></polyline>
+<polyline points="213,62 213,98"></polyline>
+<polyline points="213,122 213,152 239,178 298,178"></polyline>
+<polyline points="498,42 400,42 393,49 393,98"></polyline>
+<polyline points="552,44 552,98"></polyline>
+<polyline points="552,122 552,178"></polyline>
+<polyline points="566,40 638,40"></polyline>
+<polyline points="566,73 608,73"></polyline>
+<polyline points="566,145 608,145"></polyline>
+<polyline points="566,180 638,180"></polyline>
+<polyline points="158,190 158,206 190,206"></polyline>
+<polyline points="260,190 260,204 300,204 300,212"></polyline>
+<polyline points="292,190 292,197 330,197"></polyline>
+<animate attributeName="opacity" values="0.75;0.75;1;0.75" keyTimes="0;0.33;0.55;1" dur="6s" repeatCount="indefinite"/></g>
+<g fill="none" stroke="#f4ffe9" stroke-width="2.5" stroke-linecap="round" filter="url(#lueur)"><polyline points="12,178 12,122" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.333;0.517;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="12,98 12,64" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.345;0.528;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="158,178 158,122" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.357;0.540;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="158,98 158,64" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.368;0.552;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="213,62 213,98" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.380;0.563;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="213,122 213,152 239,178 298,178" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.392;0.575;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="498,42 400,42 393,49 393,98" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.403;0.587;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="552,44 552,98" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.415;0.598;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="552,122 552,178" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.427;0.610;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="566,40 638,40" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.438;0.622;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="566,73 608,73" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.450;0.633;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="566,145 608,145" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.462;0.645;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="566,180 638,180" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.473;0.657;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="158,190 158,206 190,206" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.485;0.668;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="260,190 260,204 300,204 300,212" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.497;0.680;1" dur="6s" repeatCount="indefinite"/></polyline><polyline points="292,190 292,197 330,197" pathLength="100" stroke-dasharray="16 300" stroke-dashoffset="16"><animate attributeName="stroke-dashoffset" values="16;16;-100;-100" keyTimes="0;0.508;0.692;1" dur="6s" repeatCount="indefinite"/></polyline></g>
+<g fill="#a8d18d" filter="url(#halo)" opacity="0.3">
+<circle cx="12" cy="64" r="7"></circle>
+<circle cx="158" cy="64" r="7"></circle>
+<circle cx="213" cy="62" r="7"></circle>
+<circle cx="298" cy="178" r="7"></circle>
+<circle cx="498" cy="42" r="7"></circle>
+<circle cx="638" cy="40" r="7"></circle>
+<circle cx="608" cy="73" r="7"></circle>
+<circle cx="608" cy="145" r="7"></circle>
+<circle cx="638" cy="180" r="7"></circle>
+<circle cx="190" cy="206" r="7"></circle>
+<circle cx="300" cy="214" r="7"></circle>
+<circle cx="330" cy="197" r="7"></circle>
+<animate attributeName="opacity" values="0.2;0.2;1;0.2" keyTimes="0;0.4;0.6;1" dur="6s" repeatCount="indefinite"/></g>
+<g fill="#a8d18d">
+<circle cx="12" cy="64" r="3.5"></circle>
+<circle cx="158" cy="64" r="3.5"></circle>
+<circle cx="213" cy="62" r="3.5"></circle>
+<circle cx="298" cy="178" r="3.5"></circle>
+<circle cx="498" cy="42" r="3.5"></circle>
+<circle cx="638" cy="40" r="3.5"></circle>
+<circle cx="608" cy="73" r="3.5"></circle>
+<circle cx="608" cy="145" r="3.5"></circle>
+<circle cx="638" cy="180" r="3.5"></circle>
+<circle cx="190" cy="206" r="3.5"></circle>
+<circle cx="300" cy="214" r="3.5"></circle>
+<circle cx="330" cy="197" r="3.5"></circle>
+<animate attributeName="fill" values="#a8d18d;#a8d18d;#f4ffe9;#a8d18d" keyTimes="0;0.4;0.6;1" dur="6s" repeatCount="indefinite"/></g>
+
+<g fill="none" stroke="#2f5d3a" stroke-width="3" stroke-linecap="round">
+<path d="M 4,212 C -14,180 4,150 -10,120 C -22,90 -2,70 -12,48 C -18,34 -4,22 14,24"></path>
+<path d="M 796,30 C 806,10 828,8 836,22 C 842,34 830,44 822,38"></path>
+<path d="M 440,190 C 438,202 430,208 424,216"></path>
+<path d="M 470,190 C 474,202 486,208 492,214"></path>
+<path d="M 560,190 C 558,200 548,206 540,214"></path>
+<path d="M 578,190 C 579,203 575,210 577,218"></path>
+<path d="M 604,190 C 608,202 618,206 626,214"></path>
+<path d="M 740,190 C 736,204 726,210 718,216"></path>
+<path d="M 770,190 C 774,200 784,204 790,212"></path>
+<path d="M 648,32 C 662,40 660,62 668,78 C 674,92 664,104 670,118 C 674,128 668,136 664,142"></path>
+</g>
+
+<g fill="none" stroke="#2f5d3a" stroke-width="1.5" stroke-linecap="round">
+<path d="M -4,166 C 6,160 10,152 8,144"></path>
+<path d="M -8,96 C -24,92 -28,80 -24,70"></path>
+<path d="M 440,190 C 446,198 452,200 458,206"></path>
+<path d="M 560,190 C 566,198 566,206 562,212"></path>
+<path d="M 740,190 C 748,198 750,206 748,214"></path>
+<path d="M 792,212 C 798,214 804,212 806,216"></path>
+<path d="M 424,216 C 420,218 416,217 414,220"></path>
+</g>
+
+<g fill="none" stroke="#3fa37a" stroke-width="1.5" stroke-linecap="round">
+<path d="M -10,120 c 8,-3 13,2 10,7 c -2,4 -7,2 -5,-2"></path>
+<path d="M -12,48 c -9,0 -11,7 -7,10 c 3,2 6,-1 4,-3"></path>
+<path d="M 836,22 c 7,5 4,12 -1,12 c -3,0 -4,-4 -1,-5"></path>
+<path d="M 668,78 c 9,-2 12,5 8,9 c -3,2 -6,-1 -4,-3"></path>
+<path d="M 4,190 c -8,2 -9,9 -5,11 c 3,1 5,-2 3,-4"></path>
+</g>
+
+<g>
+<use href="#fMousse" transform="translate(-10,120) rotate(-150)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.06s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.45s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(-8,150) rotate(-20)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.06s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.9s" begin="-0.80s" repeatCount="indefinite"/></use>
+<use href="#fMousse" transform="translate(-12,74) rotate(-20)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.06s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.9s" begin="-0.09s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(-14,48) rotate(-160)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;12;-4.2;7.2;-2.4;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.05s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.9s" begin="-0.09s" repeatCount="indefinite"/></use>
+<use href="#fPale" transform="translate(8,24) rotate(-40)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.09s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.96s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(-4,180) rotate(200) scale(0.8)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.07s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.83s" repeatCount="indefinite"/></use>
+<use href="#fPale" transform="translate(-16,100) rotate(-190) scale(0.75)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.05s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.04s" repeatCount="indefinite"/></use>
+<use href="#fMousse" transform="translate(-6,136) rotate(10) scale(0.7)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.07s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.78s" repeatCount="indefinite"/></use>
+<use href="#fougere" transform="translate(8,144) rotate(-70) scale(0.9)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;12;-4.2;7.2;-2.4;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.09s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.59s" repeatCount="indefinite"/></use>
+<use href="#fougere" transform="translate(-24,70) rotate(-100) scale(0.8)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.04s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.9s" begin="-0.64s" repeatCount="indefinite"/></use>
+
+<use href="#fJade" transform="translate(812,12) rotate(-120)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.31s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.66s" repeatCount="indefinite"/></use>
+<use href="#fMousse" transform="translate(836,24) rotate(20)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.35s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.0s" begin="-0.41s" repeatCount="indefinite"/></use>
+<use href="#fPale" transform="translate(824,40) rotate(140)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.33s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.0s" begin="-0.32s" repeatCount="indefinite"/></use>
+<use href="#fMousse" transform="translate(800,20) rotate(-160) scale(0.7)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.29s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.0s" begin="-0.03s" repeatCount="indefinite"/></use>
+
+<use href="#fMousse" transform="translate(664,50) rotate(-20) scale(0.85)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.09s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.11s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(662,62) rotate(190) scale(0.8)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;12;-4.2;7.2;-2.4;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.08s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.07s" repeatCount="indefinite"/></use>
+<use href="#fPale" transform="translate(670,96) rotate(-10) scale(0.8)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.10s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.21s" repeatCount="indefinite"/></use>
+<use href="#fMousse" transform="translate(668,118) rotate(200) scale(0.75)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.09s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.38s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(664,142) rotate(70) scale(0.7)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.09s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.07s" repeatCount="indefinite"/></use>
+
+<use href="#fMousse" transform="translate(330,108) rotate(-35) scale(0.8)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.58s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.0s" begin="-0.34s" repeatCount="indefinite"/></use>
+<use href="#fJade" transform="translate(330,108) rotate(-100) scale(0.7)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;12;-4.2;7.2;-2.4;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.58s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.0s" begin="-0.02s" repeatCount="indefinite"/></use>
+<use href="#fPale" transform="translate(330,108) rotate(-165) scale(0.55)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.58s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.13s" repeatCount="indefinite"/></use>
+
+<use href="#fougere" transform="translate(458,206) rotate(30) scale(0.7)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;8;-2.8;4.8;-1.6;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.77s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.8s" begin="-0.06s" repeatCount="indefinite"/></use>
+<use href="#fougere" transform="translate(562,212) rotate(100) scale(0.6)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;14;-4.9;8.4;-2.8;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="0.93s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="0.9s" begin="-0.68s" repeatCount="indefinite"/></use>
+<use href="#fougere" transform="translate(748,214) rotate(80) scale(0.6)"><animateTransform attributeName="transform" type="rotate" additive="sum" values="0;10;-3.5;6.0;-2.0;0" keyTimes="0;0.2;0.4;0.6;0.8;1" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1;0.45 0 0.55 1" dur="6s" begin="1.21s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1 0.82;1 1" dur="1.2s" begin="-0.51s" repeatCount="indefinite"/></use>
+</g>
+
+<g>
+<use href="#bourgeon" transform="translate(14,24)"><animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;1.5 1;0 0" dur="3.5s" repeatCount="indefinite"/></use>
+<use href="#bourgeon" transform="translate(822,38) scale(0.8)"><animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;1.5 1;0 0" dur="2.5s" repeatCount="indefinite"/></use>
+<use href="#bourgeon" transform="translate(664,142) scale(0.8)"><animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;1.5 1;0 0" dur="3s" repeatCount="indefinite"/></use>
+<use href="#bourgeon" transform="translate(-24,70) scale(0.7)"><animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;1.5 1;0 0" dur="3.5s" repeatCount="indefinite"/></use>
+</g>
+
+<rect x="259" y="87" width="32" height="32" fill="#a8d18d" transform="rotate(45 275 103)" filter="url(#halo)" opacity="0.3">
+<animate attributeName="opacity" values="0.25;1;0.25" dur="3.0s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
+</rect>
+<rect x="267" y="95" width="16" height="16" fill="#3fa37a" transform="rotate(45 275 103)"></rect>
+<rect x="271" y="99" width="8" height="8" fill="#a8d18d" transform="rotate(45 275 103)">
+<animate attributeName="fill" values="#a8d18d;#f4ffe9;#a8d18d" dur="3.0s" repeatCount="indefinite"/>
+</rect>
+<use href="#fMousse" opacity="0">
+<animateMotion path="M-60,20 C200,-20 450,110 900,60" dur="8s" begin="0s" repeatCount="indefinite" rotate="auto"/>
+<animateTransform attributeName="transform" type="scale" values="0.6 0.6;0.6 0.24;0.6 0.6" dur="0.9s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="8s" begin="0s" repeatCount="indefinite"/>
+</use>
+<use href="#fJade" opacity="0">
+<animateMotion path="M-60,150 C200,110 450,160 900,110" dur="9s" begin="-3s" repeatCount="indefinite" rotate="auto"/>
+<animateTransform attributeName="transform" type="scale" values="0.55 0.55;0.55 0.22;0.55 0.55" dur="0.9s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="9s" begin="-3s" repeatCount="indefinite"/>
+</use>
+<use href="#fPale" opacity="0">
+<animateMotion path="M-60,70 C200,30 450,80 900,30" dur="10s" begin="-6.5s" repeatCount="indefinite" rotate="auto"/>
+<animateTransform attributeName="transform" type="scale" values="0.5 0.5;0.5 0.20;0.5 0.5" dur="0.9s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="10s" begin="-6.5s" repeatCount="indefinite"/>
+</use>
+</svg>

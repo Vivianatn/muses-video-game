@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bow3fegjd1eo3"
-path="res://.godot/imported/South-East_0001.png-ffd4c00fb6c93eb738c46ae536f6d323.ctex"
+uid="uid://08ihqqtnxwom"
+path="res://.godot/imported/Fire.png-8b38958c5f31eb60a2c3d90f31358ff3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Héros/Fire/South-East_0001.png"
-dest_files=["res://.godot/imported/South-East_0001.png-ffd4c00fb6c93eb738c46ae536f6d323.ctex"]
+source_file="res://Sprites/Héros/Fire.png"
+dest_files=["res://.godot/imported/Fire.png-8b38958c5f31eb60a2c3d90f31358ff3.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://6xb1wyffqvur"
-path="res://.godot/imported/idle.png-b9cca4eea1932c727dc95ce84f859e07.ctex"
+uid="uid://bg14twohrr7vf"
+path="res://.godot/imported/Grab.png-659c99453795d08fc660586c32016ad4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Héros/Idle/idle.png"
-dest_files=["res://.godot/imported/idle.png-b9cca4eea1932c727dc95ce84f859e07.ctex"]
+source_file="res://Sprites/Héros_ancien/Grab/Grab.png"
+dest_files=["res://.godot/imported/Grab.png-659c99453795d08fc660586c32016ad4.ctex"]
 
 [params]
 

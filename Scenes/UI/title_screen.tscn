@@ -1,9 +1,30 @@
 [gd_scene format=3 uid="uid://5c24csw4dbdx"]
 
 [ext_resource type="Script" uid="uid://bj6vd0418swy5" path="res://Scripts/UI/title_screen.gd" id="1_title"]
-[ext_resource type="Texture2D" path="res://muses-logo-4k.png" id="3_logo"]
+[ext_resource type="VideoStream" path="res://Multimédia/muses-logo-anime.ogv" id="3_logo"]
 [ext_resource type="Script" path="res://Scripts/UI/circuit.gd" id="4_circuit"]
 [ext_resource type="Script" path="res://Scripts/UI/controls_panel.gd" id="5_controls"]
+
+
+[sub_resource type="Shader" id="Shader_logo"]
+code = "shader_type canvas_item;
+
+// La vidéo n'a pas de transparence : son fond est peint de la couleur de
+// l'écran titre. On le rend transparent pour qu'aucun bord de cadre ne se
+// devine, même si l'encodage décale légèrement la teinte.
+uniform vec3 key_color : source_color = vec3(0.078431375, 0.043137256, 0.047058824);
+uniform float threshold = 0.03;
+uniform float softness = 0.05;
+
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	float d = distance(c.rgb, key_color);
+	COLOR = vec4(c.rgb, c.a * smoothstep(threshold, threshold + softness, d));
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_logo"]
+shader = SubResource("Shader_logo")
 
 [node name="TitleScreen" type="Control" unique_id=802243554 groups=["title_screen"]]
 layout_mode = 3
@@ -39,13 +60,16 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 14
 
-[node name="Logo" type="TextureRect" parent="Menu" unique_id=2004221769]
+[node name="Logo" type="VideoStreamPlayer" parent="Menu" unique_id=2004221769]
+material = SubResource("ShaderMaterial_logo")
 custom_minimum_size = Vector2(600, 171)
 layout_mode = 2
 texture_filter = 4
-texture = ExtResource("3_logo")
-expand_mode = 1
-stretch_mode = 5
+mouse_filter = 2
+stream = ExtResource("3_logo")
+autoplay = true
+expand = true
+loop = true
 
 [node name="LogoSpacer" type="Control" parent="Menu" unique_id=2004221770]
 custom_minimum_size = Vector2(0, 22)

@@ -132,10 +132,11 @@ signal died
 ## Délai (s) entre deux tirs.
 @export var fire_cooldown: float = 0.45
 ## Durée (s) pendant laquelle la pose de tir reste affichée.
-## Repère : nombre de frames de l'animation / sa vitesse (3 / 10 = 0.3 s).
-@export var fire_anim_time: float = 0.3
+## Repère : nombre de frames de l'animation / sa vitesse (5 / 15 = 0.33 s).
+@export var fire_anim_time: float = 0.33
 ## Délai (s) entre l'appui et le départ réel de la balle. Sert à caler le tir sur
 ## la frame où l'arme fait feu : 0 = départ immédiat, fire_anim_time = à la toute fin.
+## Repère : l'éclair est sur la 4e frame (3 / 15 = 0.2 s).
 @export var fire_spawn_delay: float = 0.2
 ## Si vrai, le tir ne part pas si l'animation est interrompue (dash, dézoom...).
 @export var fire_cancel_on_interrupt: bool = true
@@ -149,24 +150,26 @@ signal died
 ## Décalage du sprite par animation, pour compenser les tailles de frame
 ## différentes d'une planche à l'autre et garder le personnage aligné sur sa
 ## capsule de collision. Y positif descend le sprite.
-## Repère : les frames font 96x96 (idle), 88x88 (walk) et 64x64 (les autres),
-## d'où un décalage de départ de (96 - taille) / 2 en Y.
-@export var idle_sprite_offset: Vector2 = Vector2.ZERO
-@export var walk_sprite_offset: Vector2 = Vector2(0, 4)
-@export var run_sprite_offset: Vector2 = Vector2(0, 16)
-@export var jump_sprite_offset: Vector2 = Vector2(0, 16)
-@export var fall_sprite_offset: Vector2 = Vector2(0, 16)
-@export var grab_sprite_offset: Vector2 = Vector2(0, 16)
-@export var fire_sprite_offset: Vector2 = Vector2(0, 2)
+## Repère : les frames font 156x156, pieds à 23 px du bas (idle, walk, run,
+## fire), ou 112x112, pieds au ras du bas (jump, fall, grab). À l'échelle 0.5,
+## ces décalages posent les pieds sur le bas de la capsule.
+@export var idle_sprite_offset: Vector2 = Vector2(0, -35.5)
+@export var walk_sprite_offset: Vector2 = Vector2(0, -35.5)
+@export var run_sprite_offset: Vector2 = Vector2(0, -35.5)
+@export var jump_sprite_offset: Vector2 = Vector2(0, -25)
+@export var fall_sprite_offset: Vector2 = Vector2(0, -25)
+@export var grab_sprite_offset: Vector2 = Vector2(-8, -25)
+@export var fire_sprite_offset: Vector2 = Vector2(0, -35.5)
 ## Taille du sprite par animation : 1 = taille d'origine. Les pieds restent en
 ## place, et seule l'image change de taille, pas la capsule. Voir SpriteFit.
-@export_range(0.1, 4.0, 0.01) var idle_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var walk_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var run_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var jump_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var fall_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var grab_sprite_scale: float = 1.0
-@export_range(0.1, 4.0, 0.01) var fire_sprite_scale: float = 1.0
+## 0.5 avec un zoom caméra x2 donnerait un pixel de l'image = un pixel d'écran.
+@export_range(0.1, 4.0, 0.01) var idle_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var walk_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var run_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var jump_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var fall_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var grab_sprite_scale: float = 0.5
+@export_range(0.1, 4.0, 0.01) var fire_sprite_scale: float = 0.5
 
 @export_group("Limites")
 ## Le bord gauche du joueur ne peut pas aller plus à gauche que cette position.
@@ -213,6 +216,8 @@ var _dash_direction: float = 1.0
 var _dash_available: bool = true
 var _dash_buffer_timer: float = 0.0
 var _facing: float = 1.0
+## Animation demandée, avant le choix de la planche gauche ou droite.
+var _anim: StringName = &"idle"
 
 # Double-tap : direction du dernier appui et temps restant pour le second appui.
 var _last_tap_direction: float = 0.0
@@ -457,7 +462,7 @@ func _update_wall_grab(delta: float, on_floor: bool) -> void:
 
 	# Le personnage se tourne face au mur auquel il se tient.
 	_facing = -signf(normal.x)
-	sprite.flip_h = _facing < 0.0
+	_play(_anim)
 
 
 func _wall_slide(delta: float) -> void:
@@ -481,7 +486,7 @@ func _try_wall_jump() -> bool:
 	var away := signf(_wall_normal.x)
 	velocity = Vector2(away * wall_jump_push, wall_jump_velocity)
 	_facing = away
-	sprite.flip_h = _facing < 0.0
+	_play(_anim)
 
 	_is_wall_grabbing = false
 	_wall_coyote_timer = 0.0
@@ -615,6 +620,10 @@ func _handle_fire(delta: float) -> void:
 	# Les pièces du revolver (Equipment) accélèrent la cadence.
 	_fire_cooldown_timer = fire_cooldown * Equipment.fire_cooldown_multiplier()
 	_fire_anim_timer = fire_anim_time
+	# Tirs enchaînés : l'animation ne boucle pas, on la reprend au début.
+	if sprite.animation == &"fire":
+		sprite.play(&"fire")
+		sprite.set_frame_and_progress(0, 0.0)
 	# On mémorise l'orientation du tir : se retourner pendant l'animation ne
 	# change pas la trajectoire de la balle déjà amorcée.
 	_fire_pending_facing = _facing
@@ -682,7 +691,9 @@ func _handle_dash(delta: float, on_floor: bool) -> void:
 		return
 
 	_dash_direction = signf(input_dir) if input_dir != 0.0 else _facing
-	sprite.flip_h = _dash_direction < 0.0
+	# Le personnage regarde là où il fonce, et tire dans ce sens ensuite.
+	_facing = _dash_direction
+	_play(_anim)
 	_dash_buffer_timer = 0.0
 
 	_cancel_pending_fire()
@@ -744,14 +755,27 @@ func _handle_horizontal(delta: float, on_floor: bool) -> void:
 	if direction != 0.0:
 		velocity.x = move_toward(velocity.x, direction * target_speed, accel * delta)
 		_facing = signf(direction)
-		sprite.flip_h = direction < 0.0
+		_play(_anim)
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, fric * delta)
 
 
 func _play(anim: StringName) -> void:
-	if sprite.animation != anim:
-		sprite.play(anim)
+	_anim = anim
+	# Les planches dessinées dans les deux sens existent en idle_left /
+	# idle_right... Sans elles, la planche unique regarde à droite et on la
+	# retourne.
+	var directed := StringName("%s_%s" % [anim, "left" if _facing < 0.0 else "right"])
+	var shown := directed if sprite.sprite_frames.has_animation(directed) else anim
+	sprite.flip_h = shown == anim and _facing < 0.0
+	if sprite.animation != shown:
+		# Demi-tour dans la même animation : on garde où on en était.
+		var turning := sprite.animation.begins_with(String(anim) + "_")
+		var frame := sprite.frame
+		var progress := sprite.frame_progress
+		sprite.play(shown)
+		if turning:
+			sprite.set_frame_and_progress(mini(frame, sprite.sprite_frames.get_frame_count(shown) - 1), progress)
 	# Chaque planche n'a pas la même taille de frame : on recale le sprite pour
 	# qu'il reste aligné sur la capsule de collision d'une animation à l'autre.
 	var off := Vector2.ZERO
@@ -921,4 +945,4 @@ func load_state(data: Dictionary) -> void:
 		health_changed.emit(_health, max_health)
 	if data.has("facing"):
 		_facing = float(data.facing)
-		sprite.flip_h = _facing < 0.0
+		_play(_anim)
