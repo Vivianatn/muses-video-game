@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Ambiance/ambiance.gd" id="1_amb"]
+[ext_resource type="Shader" path="res://Shaders/ambiance_souterrain.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_souterrain"]
+shader = ExtResource("2_shader")
+
+[node name="AmbianceSouterrain" type="Node"]
+script = ExtResource("1_amb")
+couleur_fond = Color(0.03, 0.025, 0.05, 1)
+lumiere_ambiante = Color(0.12, 0.12, 0.19, 1)
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.12, 0.12, 0.19, 1)
+
+[node name="Effet" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="Ecran" type="ColorRect" parent="Effet"]
+material = SubResource("ShaderMaterial_souterrain")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

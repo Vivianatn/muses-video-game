@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Ambiance/lumiere.gd" id="1_lum"]
+
+[node name="Lumiere" type="PointLight2D"]
+color = Color(1, 0.6, 0.28, 1)
+energy = 1.5
+texture_scale = 2.4
+script = ExtResource("1_lum")

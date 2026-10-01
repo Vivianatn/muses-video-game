@@ -224,6 +224,43 @@ PNJ, les touches des compétences) affichent les boutons de la manette.
 - Tous les boutons s'animent seuls au survol, à la sélection et à l'appui
   (autoload `UiMotion`).
 
+### Ambiances visuelles
+Chaque niveau reçoit une **ambiance** : on instancie l'une des scènes de
+`Scenes/Ambiance/` à la racine du niveau. Les effets se règlent dans
+*Effet/Ecran → Material → Shader Parameters*. Ils ne touchent que le monde,
+pas le HUD, les dialogues ni le menu.
+
+- **`exterieur.tscn`** (shader `Shaders/ambiance_exterieur.gdshader`) : le
+  fond est remplacé par un ciel en dégradé avec un soleil. Les rayons du
+  soleil sont bloqués par le terrain et les arbres, ce qui crée des rayons
+  entre les feuillages et des ombres. S'y ajoutent un étalonnage chaud en
+  lumière et froid à l'ombre, un halo autour des zones claires, du relief,
+  une brume vers le bas de l'écran et une vignette.
+- **`souterrain.tscn`** (shader `Shaders/ambiance_souterrain.gdshader`) : le
+  monde est plongé dans la pénombre et seules les lumières éclairent. Leur
+  couleur s'affirme sur ce qu'elles touchent, elles diffusent un halo coloré
+  dans l'air et des poussières scintillent dans la lumière. Les ombres
+  restent froides et lisibles.
+- **`lumiere.tscn`** (nœud `Lumiere`) : une source de lumière à poser dans
+  le niveau. Types : *Torche* (vacille), *Lanterne*, *Cristal*, *Champignon*,
+  *Sève* (pulsent) ou *Personnalisée*. Le cœur lumineux s'affiche tout seul ;
+  on le coupe si le décor dessine déjà la source.
+
+- **`parallax_foret.tscn`** : le décor de l'île, en parallax, à poser à la
+  racine d'un niveau extérieur. Du fond vers l'avant : la mer et des îlots
+  boisés à l'horizon (défilement 0.1), les collines de l'île couvertes de
+  forêt, avec de la brume dans les creux (0.2), une jungle lointaine dans la
+  brume bleutée (0.4) et la jungle (0.65). Chaque couche se répète à l'infini.
+  Les images (`Sprites/Parallax/`) sont générées par
+  `python tools/generer_parallax.py`. Les deux jungles viennent de l'image
+  `Sprites/Parallax/Source/jungle.png` (dossier ignoré par Godot) : le script
+  la rend raccordable et la réduit. Pour changer de jungle, remplacer cette
+  image et relancer le script.
+
+La **couleur de fond** de l'ambiance sert de repère au ciel : la garder
+différente de toutes les couleurs des décors. *Effet actif* coupe le
+post-traitement, pour comparer.
+
 ### Niveaux
 - Décors construits avec un `TileMapLayer` et le TileSet `Tilesets/`
 - Les collisions des tuiles se définissent dans l'éditeur de TileSet
@@ -238,6 +275,7 @@ Muses/
 ├── Items/                      # Fiches des objets et pièces du revolver (.tres)
 ├── Multimédia/                 # Vidéos : intro studio, logo animé de l'écran titre
 ├── Scenes/
+│   ├── Ambiance/               # exterieur, souterrain, lumiere, parallax_foret
 │   ├── Character/              # player, vory, dory, léry
 │   ├── Collectable/            # connaissance, ancient_key
 │   ├── Elements/               # dialogue_trigger, platform_test
@@ -261,17 +299,18 @@ Muses/
 │   ├── Skills/                 # Autoload Skills, SkillData
 │   ├── UI/                     # Menus, écrans, DA, widgets
 │   └── Weapons/bullet.gd
-├── Shaders/vignette.gdshader   # Assombrissement des bords (mode concentration)
+├── Shaders/                    # vignette (concentration), ambiances extérieur et souterrain
 ├── Skills/                     # Fiches des compétences (.tres)
 ├── Sprites/
 │   ├── Héros/                  # Planches actuelles du héros (156 px / 112 px)
 │   ├── Héros_ancien/           # Anciennes planches, plus utilisées
 │   ├── Vory/, Dory/, Léry/     # PNJ
 │   ├── Ennemies/               # Ennemis
+│   ├── Parallax/               # Couches du décor de fond (générées)
 │   ├── Elements/               # Objets
 │   └── UI/                     # Icônes d'interface (curseurs, interrupteurs)
 ├── Tilesets/                   # Planches de tuiles des décors
-├── tools/                      # build_theme.gd + scripts de synchronisation Git
+├── tools/                      # build_theme.gd, generer_parallax.py, scripts Git
 └── project.godot
 ```
 
@@ -396,6 +435,13 @@ SVG en image fixe : le logo est donc joué sous forme de **vidéo**,
 - Intro vidéo du studio Tharros avant l'écran titre.
 - Logo de l'écran titre remplacé par le logo animé, joué en vidéo en boucle.
 - Transition animée du bouton *Continuer*.
+
+**Ambiances**
+- Shaders d'ambiance extérieur (ciel, soleil, rayons, étalonnage) et
+  souterrain (pénombre, lumières colorées, halo, poussières).
+- Nœud `Lumiere` avec types prêts à l'emploi.
+- Décor en parallax de l'île : mer et îlots, collines boisées, jungle.
+- Le niveau de test utilise l'ambiance extérieure et le parallax.
 
 **Corrections**
 - Avertissements GDScript supprimés : conversions explicites vers les types

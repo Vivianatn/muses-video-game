@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://Sprites/Parallax/1_mer.png" id="1_tex"]
+[ext_resource type="Texture2D" path="res://Sprites/Parallax/2_collines.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://Sprites/Parallax/3_jungle_lointaine.png" id="3_tex"]
+[ext_resource type="Texture2D" path="res://Sprites/Parallax/4_jungle.png" id="4_tex"]
+
+[node name="ParallaxForet" type="Node2D"]
+
+[node name="Mer" type="Parallax2D" parent="."]
+z_index = -50
+scroll_scale = Vector2(0.1, 0.1)
+repeat_size = Vector2(640, 0)
+repeat_times = 8
+
+[node name="Sprite" type="Sprite2D" parent="Mer"]
+texture_filter = 1
+position = Vector2(0, 220)
+texture = ExtResource("1_tex")
+centered = false
+
+[node name="Collines" type="Parallax2D" parent="."]
+z_index = -40
+scroll_scale = Vector2(0.2, 0.2)
+repeat_size = Vector2(560, 0)
+repeat_times = 8
+
+[node name="Sprite" type="Sprite2D" parent="Collines"]
+texture_filter = 1
+position = Vector2(0, 171)
+texture = ExtResource("2_tex")
+centered = false
+
+[node name="JungleLointaine" type="Parallax2D" parent="."]
+z_index = -30
+scroll_scale = Vector2(0.4, 0.4)
+repeat_size = Vector2(250, 0)
+repeat_times = 8
+
+[node name="Sprite" type="Sprite2D" parent="JungleLointaine"]
+texture_filter = 1
+position = Vector2(0, 273)
+texture = ExtResource("3_tex")
+centered = false
+
+[node name="Jungle" type="Parallax2D" parent="."]
+z_index = -20
+scroll_scale = Vector2(0.65, 0.65)
+repeat_size = Vector2(384, 0)
+repeat_times = 8
+
+[node name="Sprite" type="Sprite2D" parent="Jungle"]
+texture_filter = 1
+position = Vector2(0, 267)
+texture = ExtResource("4_tex")
+centered = false

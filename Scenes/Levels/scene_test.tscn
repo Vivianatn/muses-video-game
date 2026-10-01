@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://dkqhrr0jrmuut" path="res://Scenes/Character/dory.tscn" id="7_28767"]
 [ext_resource type="PackedScene" uid="uid://c5hl488560od5" path="res://Scenes/Collectable/connaissance.tscn" id="8_nfx64"]
 [ext_resource type="PackedScene" uid="uid://cpio0hay7m70m" path="res://Scenes/Collectable/ancient_key.tscn" id="9_caq6j"]
+[ext_resource type="PackedScene" path="res://Scenes/Ambiance/exterieur.tscn" id="10_amb"]
+[ext_resource type="PackedScene" path="res://Scenes/Ambiance/parallax_foret.tscn" id="11_prlx"]
 
 [node name="Scene de test" type="Node2D" unique_id=66472888]
 
@@ -61,3 +63,7 @@ position = Vector2(5258, 403)
 
 [node name="EnnemyWalker3" parent="Ennemies" unique_id=1290147867 instance=ExtResource("3_e8slb")]
 position = Vector2(6494, 403)
+
+[node name="AmbianceExterieur" parent="." unique_id=1404030482 instance=ExtResource("10_amb")]
+
+[node name="ParallaxForet" parent="." unique_id=1195151143 instance=ExtResource("11_prlx")]
